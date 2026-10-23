@@ -130,7 +130,7 @@
                         </div>
                         <h3 class="text-2xl font-bold font-heading text-slate-900 mb-2">Customer Portal</h3>
                         <p class="text-slate-500 text-sm mb-6 leading-relaxed">
-                            Sign up or enter with your Family Name and Password to shop medicine, syrups, droplets, and cosmetics with live prices and instant home order checkout.
+                            Enter simply with your Family Name to shop medicine, syrups, droplets, and cosmetics with live prices and instant home order checkout.
                         </p>
                         <ul class="text-xs text-slate-600 space-y-2.5 mb-8">
                             <li class="flex items-center"><i class="fas fa-check-circle text-brand-500 mr-2"></i> Amazon-style live pricing & stock status</li>
@@ -153,11 +153,11 @@
                         </div>
                         <h3 class="text-2xl font-bold font-heading text-slate-900 mb-2">Staff & Worker Portal</h3>
                         <p class="text-slate-500 text-sm mb-6 leading-relaxed">
-                            Protected access for Al-Tawfiqia staff. Authenticate using your official 12-character private ID to manage stock, discounts, and real-time order fulfillments.
+                            Protected access for Al-Tawfiqia staff. Authenticate using your official 12-character private ID to manage stock, toggle visibility, and fulfill orders.
                         </p>
                         <ul class="text-xs text-slate-600 space-y-2.5 mb-8">
                             <li class="flex items-center"><i class="fas fa-shield-halved text-teal-600 mr-2"></i> Secure 12-character staff identification</li>
-                            <li class="flex items-center"><i class="fas fa-box-archive text-teal-600 mr-2"></i> Restock history auto-fill & foldable sale tool</li>
+                            <li class="flex items-center"><i class="fas fa-eye-slash text-teal-600 mr-2"></i> Remove or hide stock items from customers</li>
                             <li class="flex items-center"><i class="fas fa-bell text-teal-600 mr-2"></i> Instant audio "TING!" chime for new orders</li>
                         </ul>
                     </div>
@@ -198,9 +198,20 @@
                 </div>
             </div>
 
+            <!-- EMPTY CATALOG STATE -->
+            <template x-if="filteredCustomerProducts.length === 0">
+                <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center text-slate-400 space-y-3 shadow-sm">
+                    <i class="fas fa-box-open text-5xl text-slate-300"></i>
+                    <h3 class="text-lg font-bold text-slate-700">No Products Currently Visible</h3>
+                    <p class="text-xs text-slate-500 max-w-md mx-auto">
+                        There are currently no items available in this category. Staff members can add or unhide items from the Staff Portal.
+                    </p>
+                </div>
+            </template>
+
             <!-- PRODUCT CATALOG GRID -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <template x-for="item in filteredProducts" :key="item.id">
+                <template x-for="item in filteredCustomerProducts" :key="item.id">
                     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
                         <div>
                             <div class="relative h-48 bg-slate-100 overflow-hidden flex items-center justify-center p-4">
@@ -269,17 +280,22 @@
 
         <!-- 3. WORKER / MANAGER PORTAL VIEW -->
         <section x-show="currentView === 'worker'" class="space-y-8">
-            <div class="flex space-x-3 border-b border-slate-200 pb-4">
-                <button @click="workerTab = 'orders'" :class="workerTab === 'orders' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm">
+            <div class="flex space-x-3 border-b border-slate-200 pb-4 overflow-x-auto">
+                <button @click="workerTab = 'orders'" :class="workerTab === 'orders' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
                     <i class="fas fa-list-check"></i>
                     <span>Customer Requests</span>
                     <span class="bg-brand-500 text-white px-2 py-0.5 rounded-full text-[10px]" x-text="orders.length"></span>
                 </button>
-                <button @click="workerTab = 'restock'" :class="workerTab === 'restock' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm">
+                <button @click="workerTab = 'restock'" :class="workerTab === 'restock' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
                     <i class="fas fa-boxes-packing"></i>
-                    <span>Restock Stock & Sale Manager</span>
+                    <span>Add / Edit Inventory Item</span>
                 </button>
-                <button @click="workerTab = 'chat'" :class="workerTab === 'chat' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm">
+                <button @click="workerTab = 'inventory'" :class="workerTab === 'inventory' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
+                    <i class="fas fa-eye-slash"></i>
+                    <span>Manage Stock & Remove Visible Items</span>
+                    <span class="bg-amber-500 text-white px-2 py-0.5 rounded-full text-[10px]" x-text="products.length"></span>
+                </button>
+                <button @click="workerTab = 'chat'" :class="workerTab === 'chat' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
                     <i class="fas fa-headset"></i>
                     <span>Live Helpline Terminal</span>
                 </button>
@@ -353,28 +369,30 @@
             <!-- TAB 2: RESTOCK STOCK FORM WITH HISTORY & FOLDABLE SALE -->
             <div x-show="workerTab === 'restock'" class="max-w-3xl mx-auto bg-white p-8 rounded-3xl border border-slate-200 shadow-md space-y-6">
                 <div>
-                    <h3 class="text-2xl font-bold text-slate-900 font-heading">Inventory & Stocking Manager</h3>
-                    <p class="text-xs text-slate-500">Restock existing stock from history or add brand new medical supplies.</p>
+                    <h3 class="text-2xl font-bold text-slate-900 font-heading">Add or Restock Medicine Item</h3>
+                    <p class="text-xs text-slate-500">Fill in the fields below to make a new medical supply or cosmetic available to customers.</p>
                 </div>
 
                 <form @submit.prevent="handleStockSubmit()" class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Restock From Item History</label>
-                        <select @change="populateFromHistory($event.target.value)" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                            <option value="">-- Choose Existing Item to Restock --</option>
-                            <template x-for="prod in products" :key="prod.id">
-                                <option :value="prod.id" x-text="prod.name + ' (' + prod.concentration + ') - Stock: ' + prod.stock"></option>
-                            </template>
-                        </select>
-                    </div>
+                    <template x-if="products.length > 0">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Restock From Existing Item History</label>
+                            <select @change="populateFromHistory($event.target.value)" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="">-- Choose Existing Item to Restock --</option>
+                                <template x-for="prod in products" :key="prod.id">
+                                    <option :value="prod.id" x-text="prod.name + ' (' + prod.concentration + ') - Stock: ' + prod.stock"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </template>
 
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Medicine Name</label>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Medicine / Item Name *</label>
                             <input type="text" x-model="stockForm.name" required placeholder="e.g. Panadol Extra" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Category</label>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Category *</label>
                             <select x-model="stockForm.category" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                                 <option value="pills">Pills / Tablets</option>
                                 <option value="syrup">Syrup / Liquids</option>
@@ -388,16 +406,16 @@
 
                     <div class="grid sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Concentration</label>
-                            <input type="text" x-model="stockForm.concentration" required placeholder="500mg / 120ml" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Concentration / Size *</label>
+                            <input type="text" x-model="stockForm.concentration" required placeholder="e.g. 500mg or 120ml" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Regular Price (EGP)</label>
-                            <input type="number" step="0.01" x-model="stockForm.price" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Regular Price (EGP) *</label>
+                            <input type="number" step="0.01" x-model="stockForm.price" required placeholder="0.00" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Stock Count</label>
-                            <input type="number" x-model="stockForm.stock" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Initial Stock Count *</label>
+                            <input type="number" x-model="stockForm.stock" required placeholder="10" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
                         </div>
                     </div>
 
@@ -435,12 +453,63 @@
                     </div>
 
                     <button type="submit" class="w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl transition shadow-lg shadow-brand-600/20 text-sm">
-                        Save / Update Inventory Item
+                        Save Item to Store Inventory
                     </button>
                 </form>
             </div>
 
-            <!-- TAB 3: WORKER HELPLINE TERMINAL -->
+            <!-- TAB 3: MANAGE / REMOVE / TOGGLE STOCK VISIBILITY -->
+            <div x-show="workerTab === 'inventory'" class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 font-heading">Inventory Visibility & Stock Removal</h3>
+                        <p class="text-xs text-slate-500">Toggle products off so customers cannot see them, or restore them anytime.</p>
+                    </div>
+                </div>
+
+                <template x-if="products.length === 0">
+                    <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center text-slate-400 space-y-3 shadow-sm">
+                        <i class="fas fa-boxes-stacked text-4xl"></i>
+                        <p class="text-sm">No items in system inventory yet. Use the "Add / Edit Inventory Item" tab to add products.</p>
+                    </div>
+                </template>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <template x-for="item in products" :key="item.id">
+                        <div class="bg-white p-5 rounded-3xl border shadow-sm flex flex-col justify-between space-y-4" :class="item.hidden ? 'border-amber-300 bg-amber-50/30' : 'border-slate-200'">
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" :class="item.hidden ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'" x-text="item.hidden ? 'Hidden from Customers' : 'Visible to Customers'"></span>
+                                    <span class="text-xs font-bold text-slate-500" x-text="item.stock + ' in stock'"></span>
+                                </div>
+
+                                <h4 class="font-bold text-slate-900 text-base" x-text="item.name"></h4>
+                                <div class="text-xs text-slate-500 flex justify-between">
+                                    <span>Category: <strong x-text="item.category"></strong></span>
+                                    <span>Dose: <strong x-text="item.concentration"></strong></span>
+                                </div>
+
+                                <div class="text-sm font-black text-slate-800 pt-1" x-text="item.price + ' EGP'"></div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 flex gap-2">
+                                <button @click="toggleProductVisibility(item.id)" 
+                                        :class="item.hidden ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'"
+                                        class="flex-1 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5">
+                                    <i class="fas" :class="item.hidden ? 'fa-eye' : 'fa-eye-slash'"></i>
+                                    <span x-text="item.hidden ? 'Make Visible' : 'Hide from Customer'"></span>
+                                </button>
+                                
+                                <button @click="deleteProduct(item.id)" class="px-3 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold transition">
+                                    <i class="fas fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- TAB 4: WORKER HELPLINE TERMINAL -->
             <div x-show="workerTab === 'chat'" class="max-w-3xl mx-auto bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-4">
                 <h3 class="font-bold text-slate-900 text-lg border-b border-slate-100 pb-3">Answer Patient Helpline Enquiries</h3>
                 
@@ -566,23 +635,18 @@
         </div>
     </div>
 
-    <!-- CUSTOMER AUTH MODAL -->
+    <!-- CUSTOMER AUTH MODAL (SIMPLIFIED: NAME ONLY) -->
     <div x-show="customerAuthModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" x-cloak>
         <div class="bg-white w-full max-w-md rounded-3xl p-6 space-y-6 shadow-2xl">
             <div class="text-center space-y-1">
                 <h3 class="text-xl font-bold text-slate-900">Customer Access Portal</h3>
-                <p class="text-xs text-slate-500">Enter your Family Name to access medicine pricing</p>
+                <p class="text-xs text-slate-500">Enter your Family / Account Name to browse store</p>
             </div>
 
             <form @submit.prevent="handleCustomerAuth()" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Family Account Name</label>
-                    <input type="text" x-model="customerForm.familyName" required placeholder="e.g. El-Sayed Family" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
-                    <input type="password" x-model="customerForm.password" required placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Family / Account Name</label>
+                    <input type="text" x-model="customerForm.familyName" required placeholder="e.g. El-Sayed Family" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500">
                 </div>
 
                 <div class="flex space-x-2 pt-2">
@@ -659,7 +723,7 @@
                 selectedCategory: 'all',
                 categories: ['all', 'syrup', 'pills', 'hair conditioners', 'soap', 'droplets', 'cosmetics'],
 
-                customerForm: { familyName: '', password: '' },
+                customerForm: { familyName: '' },
                 customerCheckout: { phone: '', address: '' },
                 workerForm: { privateId: '' },
 
@@ -682,15 +746,10 @@
                 ],
                 dailyQuote: '',
 
-                // PRODUCTS INVENTORY
-                products: [
-                    { id: '1', name: 'Panadol Extra', category: 'pills', concentration: '500mg', price: 45, salePrice: 35, isOnSale: true, stock: 24, isRare: false, imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80' },
-                    { id: '2', name: 'Cough Care Syrup', category: 'syrup', concentration: '120ml', price: 60, salePrice: 0, isOnSale: false, stock: 12, isRare: false, imageUrl: 'https://images.unsplash.com/photo-1550572017-edf7928902d2?auto=format&fit=crop&w=400&q=80' },
-                    { id: '3', name: 'Keratin Hair Serum', category: 'hair conditioners', concentration: '250ml', price: 180, salePrice: 150, isOnSale: true, stock: 5, isRare: true, imageUrl: 'https://images.unsplash.com/photo-1526947425960-945c6e72858f?auto=format&fit=crop&w=400&q=80' },
-                    { id: '4', name: 'Eye Relief Droplets', category: 'droplets', concentration: '15ml', price: 85, salePrice: 0, isOnSale: false, stock: 8, isRare: true, imageUrl: 'https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&w=400&q=80' }
-                ],
+                // PRODUCTS INVENTORY (EMPTY - Dynamic stock added by staff)
+                products: [],
 
-                stockForm: { id: null, name: '', category: 'pills', concentration: '', price: '', salePrice: '', isOnSale: false, stock: '', isRare: false, imageUrl: '' },
+                stockForm: { id: null, name: '', category: 'pills', concentration: '', price: '', salePrice: '', isOnSale: false, stock: '', isRare: false, imageUrl: '', hidden: false },
                 cart: [],
                 orders: [],
 
@@ -711,8 +770,8 @@
                 },
 
                 handleCustomerAuth() {
-                    if (!this.customerForm.familyName) return;
-                    this.customerAccount.familyName = this.customerForm.familyName;
+                    if (!this.customerForm.familyName.trim()) return;
+                    this.customerAccount.familyName = this.customerForm.familyName.trim();
                     this.customerAuthModalOpen = false;
                     this.currentView = 'customer';
                 },
@@ -823,6 +882,7 @@
                         isOnSale: !!this.stockForm.isOnSale,
                         stock: parseInt(this.stockForm.stock) || 0,
                         isRare: !!this.stockForm.isRare,
+                        hidden: false,
                         imageUrl: this.stockForm.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80'
                     };
 
@@ -832,8 +892,20 @@
                         this.products.unshift(prodData);
                     }
 
-                    this.stockForm = { id: null, name: '', category: 'pills', concentration: '', price: '', salePrice: '', isOnSale: false, stock: '', isRare: false, imageUrl: '' };
-                    this.showModal('Inventory Saved', 'Product stock updated successfully!');
+                    this.stockForm = { id: null, name: '', category: 'pills', concentration: '', price: '', salePrice: '', isOnSale: false, stock: '', isRare: false, imageUrl: '', hidden: false };
+                    this.showModal('Inventory Saved', 'Product stock updated and now visible to customers!');
+                },
+
+                toggleProductVisibility(id) {
+                    const prod = this.products.find(p => p.id === id);
+                    if (prod) {
+                        prod.hidden = !prod.hidden;
+                    }
+                },
+
+                deleteProduct(id) {
+                    this.products = this.products.filter(p => p.id !== id);
+                    this.cart = this.cart.filter(c => c.id !== id);
                 },
 
                 sendChatMessage() {
@@ -874,8 +946,9 @@
                     } catch (e) {}
                 },
 
-                get filteredProducts() {
+                get filteredCustomerProducts() {
                     return this.products.filter(p => {
+                        if (p.hidden) return false;
                         const matchesCategory = this.selectedCategory === 'all' || p.category.toLowerCase() === this.selectedCategory.toLowerCase();
                         const matchesSearch = p.name.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
                                               p.category.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
