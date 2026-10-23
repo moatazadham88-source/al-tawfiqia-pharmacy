@@ -89,7 +89,7 @@
                 <template x-if="currentView !== 'landing'">
                     <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 mr-2">
                         <span class="w-2 h-2 rounded-full bg-brand-500 mr-1.5 animate-pulse"></span>
-                        <span x-text="currentView === 'customer' ? t('customerPortal') + ' (' + customerAccount.familyName + ')' : t('staffPortal') + ' (' + currentWorkerName + ')'"></span>
+                        <span x-text="currentView === 'customer' ? t('customerPortal') + ' (' + customerAccount.username + ')' : t('staffPortal') + ' (' + currentWorkerName + ')'"></span>
                     </span>
                 </template>
 
@@ -136,7 +136,7 @@
                         </div>
                         <h3 class="text-2xl font-bold font-heading text-slate-900 mb-2" x-text="t('customerPortal')">Customer Portal</h3>
                         <p class="text-slate-500 text-sm mb-6 leading-relaxed" x-text="t('customerPortalDesc')">
-                            Enter simply with your Family Name to shop medicine, syrups, droplets, and cosmetics with live prices and prescription photo upload options.
+                            Enter with your Username, Phone Number & Location to shop medicine, cosmetics, and send prescriptions directly to staff.
                         </p>
                         <ul class="text-xs text-slate-600 space-y-2.5 mb-8">
                             <li class="flex items-center"><i class="fas fa-check-circle text-brand-500 mr-2"></i> Symptom & Active Ingredient Search</li>
@@ -341,8 +341,8 @@
                             <div class="space-y-3">
                                 <div class="flex justify-between items-start border-b border-slate-100 pb-3">
                                     <div>
-                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Family Name</div>
-                                        <div class="font-bold text-slate-900 text-lg" x-text="ord.familyName"></div>
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer</div>
+                                        <div class="font-bold text-slate-900 text-lg" x-text="ord.username"></div>
                                     </div>
                                     <span class="px-3 py-1 bg-amber-50 text-amber-700 font-bold text-[10px] rounded-full uppercase" x-text="ord.status || 'Pending'"></span>
                                 </div>
@@ -365,6 +365,16 @@
                                         </div>
                                     </template>
                                 </div>
+
+                                <!-- CUSTOMER OPTIONAL NOTES DISPLAY -->
+                                <template x-if="ord.notes">
+                                    <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-1">
+                                        <span class="font-bold text-amber-900 text-[10px] uppercase tracking-wider flex items-center">
+                                            <i class="fas fa-note-sticky mr-1 text-amber-600"></i> Customer Note:
+                                        </span>
+                                        <p class="text-slate-700 italic" x-text="ord.notes"></p>
+                                    </div>
+                                </template>
 
                                 <div class="pt-2 border-t border-slate-100 text-xs space-y-1 bg-slate-50 p-2.5 rounded-xl">
                                     <div class="flex items-center text-slate-700">
@@ -684,6 +694,15 @@
                                 <label class="block text-[11px] font-bold text-slate-600 mb-1">Delivery Address *</label>
                                 <input type="text" x-model="customerCheckout.address" placeholder="Building 12, Street 5" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-500">
                             </div>
+
+                            <!-- OPTIONAL ORDER NOTES FIELD -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                                    <span>Special Instructions / Notes</span>
+                                    <span class="text-[10px] text-slate-400 font-normal">Optional</span>
+                                </label>
+                                <textarea x-model="customerCheckout.notes" rows="2" placeholder="e.g. Call before delivery, allergies, or dosage instructions..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"></textarea>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -715,8 +734,8 @@
 
             <div class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50">
                 <template x-for="msg in chatMessages" :key="msg.id">
-                    <div :class="msg.sender === customerAccount.familyName ? 'justify-end' : 'justify-start'" class="flex">
-                        <div :class="msg.sender === customerAccount.familyName ? 'bg-brand-600 text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'" class="max-w-xs px-4 py-2.5 rounded-2xl text-xs space-y-1 shadow-sm">
+                    <div :class="msg.sender === customerAccount.username ? 'justify-end' : 'justify-start'" class="flex">
+                        <div :class="msg.sender === customerAccount.username ? 'bg-brand-600 text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-200 rounded-bl-none'" class="max-w-xs px-4 py-2.5 rounded-2xl text-xs space-y-1 shadow-sm">
                             <div class="flex justify-between items-center space-x-2">
                                 <strong class="font-bold text-[10px] opacity-80" x-text="msg.sender"></strong>
                                 <span class="text-[9px] opacity-60" x-text="msg.time"></span>
@@ -740,19 +759,29 @@
     <div x-show="customerAuthModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" x-cloak>
         <div class="bg-white w-full max-w-md rounded-3xl p-6 space-y-6 shadow-2xl">
             <div class="text-center space-y-1">
-                <h3 class="text-xl font-bold text-slate-900">Customer Access Portal</h3>
-                <p class="text-xs text-slate-500">Enter your Family / Account Name to browse store</p>
+                <h3 class="text-xl font-bold text-slate-900">Create / Access Customer Account</h3>
+                <p class="text-xs text-slate-500">Enter your details so staff can reach you easily</p>
             </div>
 
             <form @submit.prevent="handleCustomerAuth()" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Family / Account Name</label>
-                    <input type="text" x-model="customerForm.familyName" required placeholder="e.g. El-Sayed Family" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Username / Name *</label>
+                    <input type="text" x-model="customerForm.username" required placeholder="e.g. Ahmed El-Sayed" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+                    <input type="tel" x-model="customerForm.phone" required placeholder="e.g. 01012345678" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Location / Delivery Address *</label>
+                    <input type="text" x-model="customerForm.address" required placeholder="e.g. 15 El-Tawfiqia St, Cairo" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-xs outline-none focus:ring-2 focus:ring-brand-500">
                 </div>
 
                 <div class="flex space-x-2 pt-2">
                     <button type="button" @click="customerAuthModalOpen = false" class="w-1/2 py-2.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600">Cancel</button>
-                    <button type="submit" class="w-1/2 py-2.5 rounded-xl text-xs font-bold bg-brand-600 text-white hover:bg-brand-700">Enter Store</button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl text-xs font-bold bg-brand-600 text-white hover:bg-brand-700">Save Account & Enter</button>
                 </div>
             </form>
         </div>
@@ -825,11 +854,11 @@
                 selectedCategory: 'all',
                 categories: ['all', 'syrup', 'pills', 'hair conditioners', 'soap', 'droplets', 'cosmetics'],
 
-                customerForm: { familyName: '' },
-                customerCheckout: { phone: '', address: '', prescriptionImage: null },
+                customerForm: { username: '', phone: '', address: '' },
+                customerCheckout: { phone: '', address: '', notes: '', prescriptionImage: null },
                 workerForm: { privateId: '' },
 
-                customerAccount: { familyName: 'Guest' },
+                customerAccount: { username: 'Guest', phone: '', address: '' },
                 currentWorkerName: '',
 
                 // TRANSLATION DICTIONARY
@@ -845,7 +874,7 @@
                         landingTitle: "Your Trusted Partner in",
                         landingSubtitle: "Health, Care & Wellness",
                         landingDesc: "Select your access portal below to browse our certified medicine & cosmetics catalog, or manage pharmacy stock and patient requests.",
-                        customerPortalDesc: "Enter simply with your Family Name to shop medicine, syrups, droplets, and cosmetics with live prices and prescription photo upload options.",
+                        customerPortalDesc: "Enter with your Username, Phone Number & Location to shop medicine, cosmetics, and send prescriptions directly to staff.",
                         staffPortalDesc: "Protected access for Al-Tawfiqia staff. Authenticate using your official 12-character private ID to manage stock, sales analytics, and prescriptions.",
                         enterCustomer: "Enter Customer Portal",
                         enterStaff: "Authenticate Staff Passcode",
@@ -872,7 +901,7 @@
                         landingTitle: "شريكك الموثوق في",
                         landingSubtitle: "الصحة والنعيم والرعاية",
                         landingDesc: "اختر بوابة الدخول أدناه لتصفح منتجاتنا الطبية والحرية في تقديم طلبات الروشتة ورسائل الدعم.",
-                        customerPortalDesc: "سجل باسم العائلة لتسوق الأدوية والمستحضرات مع إمكانية رفع صورة الروشتة مباشرة.",
+                        customerPortalDesc: "أنشئ حساباً باسمك ورقم الهاتف والعنوان لطلب الأدوية ورفع صورة الروشتة مباشرة.",
                         staffPortalDesc: "دخول مخصص لطاقم صيدلية التوفيقية بكلمة المرور لإدارة المخزون والتحليلات والطلبات.",
                         enterCustomer: "الدخول لبوابة العملاء",
                         enterStaff: "تسجيل دخول الصيدلي",
@@ -933,8 +962,16 @@
                 },
 
                 handleCustomerAuth() {
-                    if (!this.customerForm.familyName.trim()) return;
-                    this.customerAccount.familyName = this.customerForm.familyName.trim();
+                    if (!this.customerForm.username.trim() || !this.customerForm.phone.trim() || !this.customerForm.address.trim()) return;
+                    this.customerAccount = {
+                        username: this.customerForm.username.trim(),
+                        phone: this.customerForm.phone.trim(),
+                        address: this.customerForm.address.trim()
+                    };
+                    // Auto pre-fill checkout fields from account details
+                    this.customerCheckout.phone = this.customerAccount.phone;
+                    this.customerCheckout.address = this.customerAccount.address;
+                    
                     this.customerAuthModalOpen = false;
                     this.currentView = 'customer';
                 },
@@ -1023,9 +1060,10 @@
 
                     const newOrder = {
                         id: 'ORD-' + Date.now().toString().slice(-5),
-                        familyName: this.customerAccount.familyName,
+                        username: this.customerAccount.username,
                         phone: this.customerCheckout.phone,
                         address: this.customerCheckout.address,
+                        notes: this.customerCheckout.notes.trim(),
                         items: [...this.cart],
                         prescriptionImage: this.customerCheckout.prescriptionImage,
                         totalPrice: this.cartTotalPrice,
@@ -1040,7 +1078,12 @@
                     });
 
                     this.cart = [];
-                    this.customerCheckout = { phone: '', address: '', prescriptionImage: null };
+                    this.customerCheckout = { 
+                        phone: this.customerAccount.phone, 
+                        address: this.customerAccount.address, 
+                        notes: '', 
+                        prescriptionImage: null 
+                    };
                     this.cartDrawerOpen = false;
                     this.playNotificationSound();
                     this.showModal('Order Submitted', 'Your order request & prescription have reached the pharmacy desk!');
@@ -1104,7 +1147,7 @@
                     if (!this.newChatMessage.trim()) return;
                     this.chatMessages.push({
                         id: Date.now().toString(),
-                        sender: this.customerAccount.familyName,
+                        sender: this.customerAccount.username,
                         text: this.newChatMessage,
                         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     });
