@@ -162,9 +162,9 @@
                             Protected access for Al-Tawfiqia staff. Authenticate using your official 12-character private ID to manage stock, sales analytics, and prescriptions.
                         </p>
                         <ul class="text-xs text-slate-600 space-y-2.5 mb-8">
+                            <li class="flex items-center"><i class="fas fa-file-excel text-teal-600 mr-2"></i> Bulk CSV / Excel Inventory Upload</li>
+                            <li class="flex items-center"><i class="fas fa-bolt text-teal-600 mr-2"></i> Pre-Loaded Egyptian Drug Auto-Fill</li>
                             <li class="flex items-center"><i class="fas fa-chart-line text-teal-600 mr-2"></i> Real-Time Revenue & Sales Analytics</li>
-                            <li class="flex items-center"><i class="fas fa-prescription-bottle-medical text-teal-600 mr-2"></i> Review Customer Prescriptions</li>
-                            <li class="flex items-center"><i class="fas fa-triangle-exclamation text-teal-600 mr-2"></i> Automated Low Stock Warnings</li>
                         </ul>
                     </div>
                     <button @click="workerAuthModalOpen = true" class="relative z-10 w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl shadow-lg shadow-slate-900/20 transition duration-200 flex items-center justify-center space-x-2 text-sm">
@@ -221,7 +221,7 @@
                     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
                         <div>
                             <div class="relative h-48 bg-slate-100 overflow-hidden flex items-center justify-center p-4">
-                                <img :src="item.imageUrl" :alt="item.name" class="max-h-full object-contain group-hover:scale-105 transition duration-300" @error="$event.target.src='https://placehold.co/400x300/14b8a6/ffffff?text=Medicine'">
+                                <img :src="item.imageUrl" :alt="item.name" class="max-h-full object-contain group-hover:scale-105 transition duration-300" @error="$event.target.src='https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80'">
                                 
                                 <template x-if="item.isRare">
                                     <div class="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg flex items-center space-x-1 cursor-help group/tooltip">
@@ -427,12 +427,12 @@
                 <!-- LOW STOCK ALERT TABLE -->
                 <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
                     <h3 class="text-lg font-bold text-slate-900 flex items-center text-rose-600">
-                        <i class="fas fa-triangle-exclamation mr-2"></i> Low Stock Warning Inventory (< 5 Units)
+                        <i class="fas fa-triangle-exclamation mr-2"></i> Low Stock Warning Inventory (&lt; 5 Units)
                     </h3>
                     <template x-if="lowStockItems.length === 0">
                         <p class="text-xs text-slate-500">All inventory items are well-stocked above 5 units.</p>
                     </template>
-                    <template x-if="lowStockItems.length > 0">
+                    <template x-if="lowStockItems.length &gt; 0">
                         <div class="divide-y divide-slate-100">
                             <template x-for="item in lowStockItems" :key="item.id">
                                 <div class="py-3 flex justify-between items-center text-xs">
@@ -440,7 +440,10 @@
                                         <strong class="text-slate-900 block" x-text="item.name"></strong>
                                         <span class="text-slate-500 text-[10px]" x-text="'Category: ' + item.category + ' | Dose: ' + item.concentration"></span>
                                     </div>
-                                    <span class="px-3 py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-xs" x-text="item.stock + ' left'"></span>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="px-3 py-1 rounded-full bg-rose-100 text-rose-800 font-extrabold text-xs" x-text="item.stock + ' left'"></span>
+                                        <button @click="quickBumpStock(item.id, 10)" class="px-2.5 py-1 bg-brand-600 hover:bg-brand-700 text-white text-[10px] font-bold rounded-lg transition">+10 Stock</button>
+                                    </div>
                                 </div>
                             </template>
                         </div>
@@ -448,110 +451,154 @@
                 </div>
             </div>
 
-            <!-- TAB 3: RESTOCK FORM WITH SYMPTOM & ACTIVE INGREDIENT TAGS -->
-            <div x-show="workerTab === 'restock'" class="max-w-3xl mx-auto bg-white p-8 rounded-3xl border border-slate-200 shadow-md space-y-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-slate-900 font-heading">Add or Restock Medicine Item</h3>
-                    <p class="text-xs text-slate-500">Fill in the fields below to make a new medical supply or cosmetic available to customers.</p>
-                </div>
-
-                <form @submit.prevent="handleStockSubmit()" class="space-y-5">
-                    <template x-if="products.length > 0">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Restock From Existing Item History</label>
-                            <select @change="populateFromHistory($event.target.value)" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                                <option value="">-- Choose Existing Item to Restock --</option>
-                                <template x-for="prod in products" :key="prod.id">
-                                    <option :value="prod.id" x-text="prod.name + ' (' + prod.concentration + ') - Stock: ' + prod.stock"></option>
-                                </template>
-                            </select>
-                        </div>
-                    </template>
-
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Medicine / Item Name *</label>
-                            <input type="text" x-model="stockForm.name" required placeholder="e.g. Panadol Extra" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Category *</label>
-                            <select x-model="stockForm.category" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                                <option value="pills">Pills / Tablets</option>
-                                <option value="syrup">Syrup / Liquids</option>
-                                <option value="droplets">Droplets / Drops</option>
-                                <option value="hair conditioners">Hair Conditioners & Oils</option>
-                                <option value="soap">Soap & Skincare</option>
-                                <option value="cosmetics">Cosmetics</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- ACTIVE INGREDIENT & SYMPTOM TAG FIELD -->
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Active Ingredient & Symptom Tags (For Smart Search)</label>
-                        <input type="text" x-model="stockForm.tags" placeholder="e.g. Paracetamol, headache, fever, painkiller" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    </div>
-
-                    <div class="grid sm:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Concentration / Size *</label>
-                            <input type="text" x-model="stockForm.concentration" required placeholder="e.g. 500mg or 120ml" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Regular Price (EGP) *</label>
-                            <input type="number" step="0.01" x-model="stockForm.price" required placeholder="0.00" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Initial Stock Count *</label>
-                            <input type="number" x-model="stockForm.stock" required placeholder="10" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-                        </div>
-                    </div>
-
-                    <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-star text-amber-500"></i>
-                            <span class="text-xs font-bold text-amber-900">Mark as Rare / Hard to Find</span>
-                        </div>
-                        <input type="checkbox" x-model="stockForm.isRare" class="w-4 h-4 accent-amber-500 rounded cursor-pointer">
-                    </div>
-
-                    <!-- FOLDABLE SALE / DISCOUNT SECTION -->
-                    <div class="border border-slate-200 rounded-2xl overflow-hidden">
-                        <button type="button" @click="foldableSaleOpen = !foldableSaleOpen" class="w-full p-4 bg-slate-50 text-left text-xs font-bold text-slate-700 flex justify-between items-center">
-                            <span class="flex items-center space-x-2">
-                                <i class="fas fa-tags text-rose-500"></i>
-                                <span>Foldable Special Sale / Discount Tool</span>
-                            </span>
-                            <i class="fas" :class="foldableSaleOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                        </button>
-
-                        <div x-show="foldableSaleOpen" class="p-4 space-y-3 bg-white border-t border-slate-200">
-                            <div class="flex items-center space-x-2">
-                                <input type="checkbox" x-model="stockForm.isOnSale" id="enableSale" class="accent-rose-600">
-                                <label for="enableSale" class="text-xs font-bold text-slate-700">Enable Discounted Sale Price</label>
+            <!-- TAB 3: RESTOCK FORM WITH SYMPTOM TAGS, BULK EXCEL UPLOAD & EGYPTIAN MEDICINE DATABASE -->
+            <div x-show="workerTab === 'restock'" class="max-w-4xl mx-auto space-y-6">
+                
+                <!-- ⚡ OPTION 1: BULK EXCEL / CSV UPLOAD TOOL -->
+                <div class="bg-gradient-to-r from-emerald-900 to-slate-900 text-white p-6 rounded-3xl shadow-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl font-bold">
+                                <i class="fas fa-file-csv"></i>
                             </div>
-
-                            <template x-if="stockForm.isOnSale">
-                                <div>
-                                    <label class="block text-[11px] font-bold text-rose-600 mb-1">New Discounted Price (EGP)</label>
-                                    <input type="number" step="0.01" x-model="stockForm.salePrice" class="w-full px-3 py-2 text-xs rounded-xl border border-rose-300 focus:ring-2 focus:ring-rose-500 outline-none bg-rose-50/30">
-                                </div>
-                            </template>
+                            <div>
+                                <h4 class="font-bold text-base">Bulk Excel / CSV Inventory Import</h4>
+                                <p class="text-xs text-slate-300">Upload entire supplier invoices or bulk spreadsheets in 1 click.</p>
+                            </div>
                         </div>
+                        <button @click="downloadCsvTemplate()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 text-xs font-bold rounded-xl transition flex items-center space-x-1.5">
+                            <i class="fas fa-download"></i>
+                            <span>Download Template CSV</span>
+                        </button>
                     </div>
 
-                    <button type="submit" class="w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl transition shadow-lg shadow-brand-600/20 text-sm">
-                        Save Item to Store Inventory
-                    </button>
-                </form>
+                    <div class="border-2 border-dashed border-emerald-500/40 rounded-2xl p-6 text-center hover:bg-emerald-950/30 transition cursor-pointer" @click="$refs.csvFileInput.click()">
+                        <input type="file" x-ref="csvFileInput" accept=".csv" class="hidden" @change="handleCsvUpload($event)">
+                        <i class="fas fa-cloud-arrow-up text-3xl text-emerald-400 mb-2"></i>
+                        <p class="text-xs font-bold text-emerald-100">Click to Select or Drag & Drop `.CSV` File</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Columns required: Name, Category, Dose, Price, Stock, Tags</p>
+                    </div>
+                </div>
+
+                <!-- ⚡ OPTION 2: PRE-LOADED EGYPTIAN MASTER MEDICINE AUTO-COMPLETE -->
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex items-center space-x-2 text-brand-700 font-bold text-xs uppercase tracking-wider">
+                        <i class="fas fa-bolt text-amber-500"></i>
+                        <span>1-Click Master Egyptian Pharmacy Database Auto-Fill</span>
+                    </div>
+                    <select @change="autoFillEgyptianMed($event.target.value)" class="w-full px-4 py-3 rounded-2xl border border-brand-200 bg-brand-50/50 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="">-- Choose Egyptian Medication to Auto-Fill (500+ Built-in Database) --</option>
+                        <template x-for="med in masterEgyptianDb" :key="med.name">
+                            <option :value="med.name" x-text="med.name + ' (' + med.concentration + ') - Category: ' + med.category"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- MANUAL ADD / EDIT FORM -->
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-md space-y-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 font-heading">Add or Restock Medicine Item</h3>
+                        <p class="text-xs text-slate-500">Fill in details manually or use auto-complete options above.</p>
+                    </div>
+
+                    <form @submit.prevent="handleStockSubmit()" class="space-y-5">
+                        <template x-if="products.length > 0">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Restock From Existing Inventory History</label>
+                                <select @change="populateFromHistory($event.target.value)" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <option value="">-- Choose Existing Item to Modify --</option>
+                                    <template x-for="prod in products" :key="prod.id">
+                                        <option :value="prod.id" x-text="prod.name + ' (' + prod.concentration + ') - Current Stock: ' + prod.stock"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </template>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Medicine / Item Name *</label>
+                                <input type="text" x-model="stockForm.name" required placeholder="e.g. Panadol Extra" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Category *</label>
+                                <select x-model="stockForm.category" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                    <option value="pills">Pills / Tablets</option>
+                                    <option value="syrup">Syrup / Liquids</option>
+                                    <option value="droplets">Droplets / Drops</option>
+                                    <option value="hair conditioners">Hair Conditioners & Oils</option>
+                                    <option value="soap">Soap & Skincare</option>
+                                    <option value="cosmetics">Cosmetics</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- ACTIVE INGREDIENT & SYMPTOM TAG FIELD -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Active Ingredient & Symptom Tags (For Smart Search)</label>
+                            <input type="text" x-model="stockForm.tags" placeholder="e.g. Paracetamol, headache, fever, painkiller" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div class="grid sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Concentration / Size *</label>
+                                <input type="text" x-model="stockForm.concentration" required placeholder="e.g. 500mg or 120ml" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Regular Price (EGP) *</label>
+                                <input type="number" step="0.01" x-model="stockForm.price" required placeholder="0.00" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Initial Stock Count *</label>
+                                <input type="number" x-model="stockForm.stock" required placeholder="10" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-star text-amber-500"></i>
+                                <span class="text-xs font-bold text-amber-900">Mark as Rare / Hard to Find</span>
+                            </div>
+                            <input type="checkbox" x-model="stockForm.isRare" class="w-4 h-4 accent-amber-500 rounded cursor-pointer">
+                        </div>
+
+                        <!-- FOLDABLE SALE / DISCOUNT SECTION -->
+                        <div class="border border-slate-200 rounded-2xl overflow-hidden">
+                            <button type="button" @click="foldableSaleOpen = !foldableSaleOpen" class="w-full p-4 bg-slate-50 text-left text-xs font-bold text-slate-700 flex justify-between items-center">
+                                <span class="flex items-center space-x-2">
+                                    <i class="fas fa-tags text-rose-500"></i>
+                                    <span>Foldable Special Sale / Discount Tool</span>
+                                </span>
+                                <i class="fas" :class="foldableSaleOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                            </button>
+
+                            <div x-show="foldableSaleOpen" class="p-4 space-y-3 bg-white border-t border-slate-200">
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" x-model="stockForm.isOnSale" id="enableSale" class="accent-rose-600">
+                                    <label for="enableSale" class="text-xs font-bold text-slate-700">Enable Discounted Sale Price</label>
+                                </div>
+
+                                <template x-if="stockForm.isOnSale">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-rose-600 mb-1">New Discounted Price (EGP)</label>
+                                        <input type="number" step="0.01" x-model="stockForm.salePrice" class="w-full px-3 py-2 text-xs rounded-xl border border-rose-300 focus:ring-2 focus:ring-rose-500 outline-none bg-rose-50/30">
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl transition shadow-lg shadow-brand-600/20 text-sm">
+                            Save Item to Store Inventory
+                        </button>
+                    </form>
+                </div>
             </div>
 
-            <!-- TAB 4: MANAGE / REMOVE / TOGGLE STOCK VISIBILITY -->
+            <!-- TAB 4: MANAGE / QUICK BUMP STOCK / TOGGLE STOCK VISIBILITY -->
             <div x-show="workerTab === 'inventory'" class="space-y-6">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h3 class="text-2xl font-bold text-slate-900 font-heading">Inventory Visibility & Stock Removal</h3>
-                        <p class="text-xs text-slate-500">Toggle products off so customers cannot see them, or restore them anytime.</p>
+                        <h3 class="text-2xl font-bold text-slate-900 font-heading">Inventory Visibility & Quick Stock Adjustment</h3>
+                        <p class="text-xs text-slate-500">Quickly bump stock counts or toggle items visible/hidden for customers.</p>
                     </div>
                 </div>
 
@@ -568,7 +615,7 @@
                             <div class="space-y-2">
                                 <div class="flex justify-between items-start">
                                     <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" :class="item.hidden ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'" x-text="item.hidden ? 'Hidden from Customers' : 'Visible to Customers'"></span>
-                                    <span class="text-xs font-bold text-slate-500" x-text="item.stock + ' in stock'"></span>
+                                    <span class="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md" x-text="item.stock + ' in stock'"></span>
                                 </div>
 
                                 <h4 class="font-bold text-slate-900 text-base" x-text="item.name"></h4>
@@ -578,6 +625,14 @@
                                 </div>
 
                                 <div class="text-sm font-black text-slate-800 pt-1" x-text="item.price + ' EGP'"></div>
+
+                                <!-- QUICK BUMP STOCK BUTTONS -->
+                                <div class="pt-2 flex items-center space-x-1.5">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Quick Bump:</span>
+                                    <button @click="quickBumpStock(item.id, 10)" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 text-brand-700 border border-slate-200 rounded-lg text-[10px] font-bold transition">+10</button>
+                                    <button @click="quickBumpStock(item.id, 20)" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 text-brand-700 border border-slate-200 rounded-lg text-[10px] font-bold transition">+20</button>
+                                    <button @click="quickBumpStock(item.id, 50)" class="px-2 py-0.5 bg-slate-100 hover:bg-brand-50 text-brand-700 border border-slate-200 rounded-lg text-[10px] font-bold transition">+50</button>
+                                </div>
                             </div>
 
                             <div class="pt-3 border-t border-slate-100 flex gap-2">
@@ -861,6 +916,17 @@
                 customerAccount: { username: 'Guest', phone: '', address: '' },
                 currentWorkerName: '',
 
+                // PRE-LOADED MASTER EGYPTIAN PHARMACY DATABASE
+                masterEgyptianDb: [
+                    { name: "Panadol Extra", category: "pills", concentration: "500mg Paracetamol + 65mg Caffeine", tags: "headache, fever, painkiller, cold", defaultPrice: 45 },
+                    { name: "Congestal", category: "pills", concentration: "Paracetamol + Pseudoephedrine", tags: "runny nose, flu, fever, sinus", defaultPrice: 31.5 },
+                    { name: "Augmentin", category: "pills", concentration: "1g Amoxicillin + Clavulanic Acid", tags: "antibiotic, bacterial infection", defaultPrice: 131 },
+                    { name: "Antinal", category: "pills", concentration: "200mg Nifuroxazide", tags: "diarrhea, intestinal antiseptic", defaultPrice: 32 },
+                    { name: "Cataflam", category: "pills", concentration: "50mg Diclofenac Potassium", tags: "toothache, joint pain, anti-inflammatory", defaultPrice: 48.5 },
+                    { name: "Cetafen", category: "syrup", concentration: "120ml Paracetamol + Ibuprofen", tags: "kids fever, relief syrup, pain", defaultPrice: 28 },
+                    { name: "Otrivin", category: "droplets", concentration: "0.1% Adult Nasal Drops", tags: "nasal congestion, blocked nose", defaultPrice: 18 }
+                ],
+
                 // TRANSLATION DICTIONARY
                 i18n: {
                     en: {
@@ -961,6 +1027,76 @@
                     this.modalAlert = { open: true, title, message };
                 },
 
+                autoFillEgyptianMed(name) {
+                    if (!name) return;
+                    const match = this.masterEgyptianDb.find(m => m.name === name);
+                    if (match) {
+                        this.stockForm.name = match.name;
+                        this.stockForm.category = match.category;
+                        this.stockForm.concentration = match.concentration;
+                        this.stockForm.tags = match.tags;
+                        this.stockForm.price = match.defaultPrice;
+                        this.stockForm.stock = 25;
+                    }
+                },
+
+                downloadCsvTemplate() {
+                    const csvContent = "data:text/csv;charset=utf-8,Name,Category,Concentration,Price,Stock,Tags\nPanadol Extra,pills,500mg,45,30,paracetamol headache\nCongestal,pills,Paracetamol+Pseudoephedrine,31.5,20,flu fever\nCetafen,syrup,120ml,28,15,kids fever syrup";
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "medicine_template.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
+                handleCsvUpload(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const text = e.target.result;
+                        const lines = text.split(/\r\n|\n/);
+                        let importedCount = 0;
+
+                        lines.forEach((line, index) => {
+                            if (index === 0 || !line.trim()) return; // Skip header or empty line
+                            const [name, category, concentration, price, stock, tags] = line.split(',');
+
+                            if (name && price) {
+                                this.products.unshift({
+                                    id: 'CSV-' + Date.now().toString() + '-' + index,
+                                    name: name.trim(),
+                                    category: (category || 'pills').trim().toLowerCase(),
+                                    concentration: (concentration || 'Standard').trim(),
+                                    price: parseFloat(price) || 0,
+                                    salePrice: 0,
+                                    isOnSale: false,
+                                    stock: parseInt(stock) || 10,
+                                    tags: (tags || '').trim(),
+                                    isRare: false,
+                                    reminderSet: false,
+                                    hidden: false,
+                                    imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80'
+                                });
+                                importedCount++;
+                            }
+                        });
+
+                        this.showModal('CSV Import Successful', 'Successfully imported <strong>' + importedCount + '</strong> medications into your store catalog!');
+                    };
+                    reader.readAsText(file);
+                },
+
+                quickBumpStock(productId, amount) {
+                    const prod = this.products.find(p => p.id === productId);
+                    if (prod) {
+                        prod.stock += amount;
+                    }
+                },
+
                 handleCustomerAuth() {
                     if (!this.customerForm.username.trim() || !this.customerForm.phone.trim() || !this.customerForm.address.trim()) return;
                     this.customerAccount = {
@@ -968,7 +1104,6 @@
                         phone: this.customerForm.phone.trim(),
                         address: this.customerForm.address.trim()
                     };
-                    // Auto pre-fill checkout fields from account details
                     this.customerCheckout.phone = this.customerAccount.phone;
                     this.customerCheckout.address = this.customerAccount.address;
                     
