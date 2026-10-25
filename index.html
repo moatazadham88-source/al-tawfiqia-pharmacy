@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth" :dir="lang === 'ar' ? 'rtl' : 'ltr'">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Tawfiqia Pharmacy | صيدلية التوفيقية</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Cairo', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- HTML5 QRCode Reader Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts: Inter & Cairo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+        }
+        #barcode-reader video {
+            width: 100% !important;
+            border-radius: 1rem;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid #0d9488; outline-offset: 2px; }
+        body.rtl-mode { direction: rtl; }
+        body.rtl-mode .text-left { text-align: right !important; }
+        body.rtl-mode .text-right { text-align: left !important; }
+        body.rtl-mode input, body.rtl-mode textarea, body.rtl-mode select { text-align: right; }
+        body.rtl-mode .ml-auto { margin-left: 0 !important; margin-right: auto !important; }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-receipt, #printable-receipt * { visibility: visible; }
+            #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-500 selection:text-white" x-data="pharmacyApp()" x-init="initApp()" @keydown.escape.window="closeActiveOverlay()" x-cloak>
+
+    <!-- TOP ANNOUNCEMENT BAR -->
+    <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-teal-100 text-xs py-2 px-4 text-center font-medium tracking-wide shadow-inner flex justify-between items-center">
+        <span class="hidden sm:inline"><i class="fas fa-heart-pulse text-teal-400 mr-2"></i> <span>Preserving Health & Quality Care Always</span></span>
+        <span class="mx-auto sm:mx-0 font-bold tracking-wider uppercase"><i class="fas fa-kit-medical mr-1 text-teal-300"></i> Al-Tawfiqia Pharmacy • صيدلية التوفيقية</span>
+        <span class="hidden md:inline"><i class="fas fa-phone mr-1 text-teal-400"></i> Helpline 24/7</span>
+    </div>
+
+    <!-- MAIN NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/80 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- BRAND LOGO -->
+            <div class="flex items-center space-x-3 cursor-pointer" @click="currentView = 'landing'">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center shadow-lg shadow-brand-600/30 text-white text-2xl font-black font-heading transform hover:rotate-6 transition duration-300">
+                    <i class="fas fa-staff-snake"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black font-heading text-slate-900 tracking-tight leading-none">
+                        Al-Tawfiqia <span class="text-brand-600 font-bold text-lg sm:text-xl">Pharmacy</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-500 font-semibold tracking-wider uppercase mt-0.5">صيدلية التوفيقية</p>
+                </div>
+            </div>
+
+            <!-- NAVIGATION CTA & USER BAR & LANGUAGE TOGGLE -->
+            <div class="flex items-center space-x-3">
+                <button @click="toggleLanguage()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-800 transition flex items-center space-x-1">
+                    <i class="fas fa-globe text-brand-600"></i>
+                    <span x-text="lang === 'en' ? 'عربي' : 'English'"></span>
+                </button>
+
+                <template x-if="currentView !== 'landing'">
+                    <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 mr-2">
+                        <span class="w-2 h-2 rounded-full bg-brand-500 mr-1.5 animate-pulse"></span>
+                        <span x-text="lang === 'ar' ? (currentView === 'customer' ? 'العميل: ' + customerAccount.username : 'الموظف: ' + (activeStaff ? activeStaff.name : 'الصيدلي')) : (currentView === 'customer' ? 'Customer: ' + customerAccount.username : 'Staff: ' + (activeStaff ? activeStaff.name : 'Pharmacist'))"></span>
+                    </span>
+                </template>
+
+                <button @click="currentView = 'landing'" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition duration-200 border border-slate-200">
+                    <i class="fas fa-right-left mr-1.5"></i> Switch Portal
+                </button>
+
+                <template x-if="currentView === 'customer'">
+                    <button @click="cartDrawerOpen = true" class="relative px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-bold rounded-xl shadow-lg shadow-brand-600/20 transition duration-200 flex items-center space-x-2 text-sm">
+                        <i class="fas fa-basket-shopping text-base"></i>
+                        <span class="hidden sm:inline">Cart</span>
+                        <span class="bg-white text-brand-800 text-xs px-2 py-0.5 rounded-full font-black shadow-sm" x-text="cartTotalItems">0</span>
+                    </button>
+                </template>
+            </div>
+        </div>
+    </header>
+
+    <!-- FIREBASE CLOUD STATUS -->
+    <div class="w-full border-b border-slate-200 bg-white/90 px-4 py-2 text-xs">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-3">
+            <span class="inline-flex items-center gap-2 font-semibold text-slate-600">
+                <span class="h-2.5 w-2.5 rounded-full" :class="cloudAuthenticated ? 'bg-emerald-500' : (cloudIssue ? 'bg-rose-500' : 'bg-amber-400')"></span>
+                <span x-text="cloudStatus"></span>
+            </span>
+            <button x-show="currentView === 'worker' && cloudAuthenticated" @click="signOutStaff()" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 font-bold text-slate-600 hover:bg-slate-100">Sign out of cloud</button>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST BAR -->
+    <div x-cloak x-show="toast.show" x-transition 
+         class="fixed bottom-5 right-5 z-50 px-5 py-3 rounded-xl shadow-2xl text-white font-semibold flex items-center space-x-3 border"
+         :class="toast.type === 'error' ? 'bg-red-600 border-red-700' : (toast.type === 'info' ? 'bg-blue-600 border-blue-700' : 'bg-brand-600 border-brand-700')">
+        <i class="fas text-lg" :class="toast.type === 'error' ? 'fa-circle-exclamation' : (toast.type === 'info' ? 'fa-circle-info' : 'fa-circle-check')"></i>
+        <span x-text="toast.message"></span>
+    </div>
+
+    <!-- MAIN BODY CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- 1. LANDING VIEW -->
+        <section x-show="currentView === 'landing'" class="py-12">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="px-4 py-1.5 rounded-full bg-brand-100 text-brand-800 text-xs font-bold uppercase tracking-widest inline-block mb-4 border border-brand-200 shadow-sm">
+                    Welcome to Al-Tawfiqia • صيدلية التوفيقية
+                </span>
+                <h2 class="text-4xl sm:text-5xl font-black font-heading text-slate-900 tracking-tight leading-tight mb-6">
+                    Your Trusted Partner in <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-teal-800">Health, Care & Wellness</span>
+                </h2>
+                <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
+                    Select your access portal below to browse our marketplace, check your loyalty badge level, or login to manage pharmacy inventory and client orders.
+                </p>
+            </div>
+
+            <!-- DUAL PORTAL CARDS -->
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- CUSTOMER PORTAL CARD -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl hover:shadow-2xl hover:border-brand-300 transition duration-300 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-3xl mb-6 shadow-inner group-hover:scale-110 transition duration-300">
+                            <i class="fas fa-user-injured"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-heading text-slate-900 mb-2">Customer Marketplace</h3>
+                        <p class="text-slate-500 text-sm mb-6 leading-relaxed">
+                            Requires Login (Name, Location & Phone). Browse catalog, earn Loyalty Tiers (Bronze to Platinum), and upload doctor prescriptions.
+                        </p>
+                        <ul class="text-xs text-slate-600 space-y-2.5 mb-8">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-brand-500 mr-2"></i> Amazon-Style Colorful Product Cards</li>
+                            <li class="flex items-center"><i class="fas fa-medal text-amber-500 mr-2"></i> Customer Loyalty Badge System</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-brand-500 mr-2"></i> Persistent Order History</li>
+                        </ul>
+                    </div>
+                    <button @click="openCustomerLoginModal()" class="relative z-10 w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl shadow-lg shadow-brand-600/30 transition duration-200 flex items-center justify-center space-x-2 text-sm">
+                        <span>Login & Enter Store</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- WORKER PORTAL CARD -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl hover:shadow-2xl hover:border-teal-300 transition duration-300 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-3xl mb-6 shadow-inner group-hover:scale-110 transition duration-300">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-heading text-slate-900 mb-2">Staff & Worker Portal</h3>
+                        <p class="text-slate-500 text-sm mb-6 leading-relaxed">
+                            Protected access for Al-Tawfiqia staff. Includes market analytics, barcode scanner, full inventory management, and backup tools.
+                        </p>
+                        <ul class="text-xs text-slate-600 space-y-2.5 mb-8">
+                            <li class="flex items-center"><i class="fas fa-chart-line text-teal-600 mr-2"></i> Market Analysis & Revenue Metrics</li>
+                            <li class="flex items-center"><i class="fas fa-database text-teal-600 mr-2"></i> JSON Data Backup & Restore Manager</li>
+                            <li class="flex items-center"><i class="fas fa-barcode text-teal-600 mr-2"></i> Camera Barcode Scanner & POS Checkout</li>
+                        </ul>
+                    </div>
+                    <button @click="showAuthModal = true" class="relative z-10 w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl shadow-lg shadow-slate-900/20 transition duration-200 flex items-center justify-center space-x-2 text-sm">
+                        <span>Staff Cloud Login</span>
+                        <i class="fas fa-lock"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. CUSTOMER PORTAL VIEW -->
+        <section x-show="currentView === 'customer'" class="space-y-8">
+            <!-- CUSTOMER WELCOME & NAV HEADER -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- LOYALTY BADGE ICON -->
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-md border"
+                             :class="{
+                                'bg-amber-100 text-amber-700 border-amber-300': customerLoyaltyTier.name === 'Bronze',
+                                'bg-slate-200 text-slate-700 border-slate-300': customerLoyaltyTier.name === 'Silver',
+                                'bg-yellow-100 text-yellow-700 border-yellow-300': customerLoyaltyTier.name === 'Gold',
+                                'bg-indigo-100 text-indigo-700 border-indigo-300': customerLoyaltyTier.name === 'Platinum'
+                             }">
+                            <i class="fas" :class="customerLoyaltyTier.icon"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h2 class="text-2xl font-black font-heading text-slate-900" x-text="customerAccount.username"></h2>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider shadow-sm"
+                                      :class="{
+                                          'bg-amber-600 text-white': customerLoyaltyTier.name === 'Bronze',
+                                          'bg-slate-600 text-white': customerLoyaltyTier.name === 'Silver',
+                                          'bg-yellow-600 text-white': customerLoyaltyTier.name === 'Gold',
+                                          'bg-indigo-600 text-white': customerLoyaltyTier.name === 'Platinum'
+                                      }" x-text="customerLoyaltyTier.name + ' Member'"></span>
+                            </div>
+                            <p class="text-xs text-slate-500 flex items-center mt-1">
+                                <i class="fas fa-location-dot text-rose-500 mr-1.5"></i> <span x-text="customerAccount.location"></span>
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-phone text-emerald-500 mr-1.5"></i> <span x-text="customerAccount.phone"></span>
+                                <span class="mx-2">•</span>
+                                <span class="font-bold text-brand-700" x-text="lang === 'ar' ? customerPoints + ' نقطة ولاء' : customerPoints + ' Loyalty Points'"></span>
+                                <span class="inline-flex items-center rounded-full bg-rose-50 border border-rose-200 px-2.5 py-1 text-[10px] font-black text-rose-700" x-text="lang === 'ar' ? customerLoyaltyTier.discount + '٪ خصم المستوى' : customerLoyaltyTier.discount + '% Tier Discount'"></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 w-full md:w-auto">
+                        <button @click="customerTab = 'shop'" :class="customerTab === 'shop' ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center space-x-1.5">
+                            <i class="fas fa-store"></i>
+                            <span>Marketplace</span>
+                        </button>
+
+                        <button @click="customerTab = 'prescription'" :class="customerTab === 'prescription' ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center space-x-1.5">
+                            <i class="fas fa-file-prescription"></i>
+                            <span>Prescription</span>
+                        </button>
+
+                        <button @click="customerTab = 'history'" :class="customerTab === 'history' ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center space-x-1.5">
+                            <i class="fas fa-clock-rotate-left"></i>
+                            <span>My Orders</span>
+                            <span class="bg-slate-900 text-white text-[10px] px-2 py-0.5 rounded-full font-mono ml-1" x-text="customerOrderHistory.length"></span>
+                        </button>
+                        <button @click="chatOpen = true" class="px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center space-x-1.5 bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100">
+                            <i class="fas fa-comments text-amber-600"></i>
+                            <span>Ask Pharmacist</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SEARCH & FILTER BAR -->
+                <div x-show="customerTab === 'shop'" class="flex flex-col sm:flex-row gap-4 pt-2 border-t border-slate-100">
+                    <div class="relative flex-1">
+                        <i class="fas fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" x-model="searchQuery" placeholder="Search by brand name, active ingredient, or symptom..." class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                    </div>
+                    <select x-model="selectedCategoryFilter" class="px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+                        <option value="">All Categories</option>
+                        <template x-for="cat in availableCategories" :key="cat">
+                            <option :value="cat" x-text="cat"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <!-- MARKETPLACE PROMO BANNER: storefront styling only; no invented products or offers -->
+            <section x-show="customerTab === 'shop'" class="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-teal-800 via-brand-700 to-indigo-700 p-6 md:p-8 text-white shadow-xl">
+                <div class="absolute -right-8 -top-10 w-44 h-44 rounded-full bg-white/10"></div>
+                <div class="absolute right-24 -bottom-20 w-52 h-52 rounded-full bg-amber-300/10"></div>
+                <div class="relative z-10 max-w-3xl">
+                    <span class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]">
+                        <i class="fas fa-store"></i> Al-Tawfiqia Marketplace
+                    </span>
+                    <h2 class="mt-4 text-2xl md:text-3xl font-black font-heading leading-tight">Browse your pharmacy catalog</h2>
+                    <p class="mt-2 max-w-2xl text-sm md:text-base text-white/85 leading-relaxed">Explore the items added by pharmacy staff, compare listed prices and stock, and place items in your cart. Only your pharmacy’s entered inventory appears below.</p>
+                    <div class="mt-5 flex flex-wrap gap-2 text-xs font-bold">
+                        <span class="inline-flex items-center gap-2 rounded-xl bg-white/15 border border-white/20 px-3 py-2"><i class="fas fa-pills"></i> Catalog browsing</span>
+                        <span class="inline-flex items-center gap-2 rounded-xl bg-white/15 border border-white/20 px-3 py-2"><i class="fas fa-file-prescription"></i> Prescription requests</span>
+                        <span class="inline-flex items-center gap-2 rounded-xl bg-white/15 border border-white/20 px-3 py-2"><i class="fas fa-comments"></i> Pharmacist chat</span>
+                    </div>
+                </div>
+                <div class="absolute bottom-4 right-6 hidden lg:flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10 text-5xl text-white/80 rotate-6">
+                    <i class="fas fa-shopping-basket"></i>
+                </div>
+            </section>
+
+            <!-- COLORFUL CATEGORY BROWSER -->
+            <div x-show="customerTab === 'shop' && availableCategories.length > 0" class="flex flex-wrap items-center gap-2">
+                <button @click="selectedCategoryFilter = ''" :class="selectedCategoryFilter === '' ? 'bg-brand-700 text-white shadow-md' : 'bg-white text-slate-700 border border-slate-200 hover:border-brand-300 hover:text-brand-700'" class="rounded-full px-4 py-2 text-xs font-bold transition">All Categories</button>
+                <template x-for="cat in availableCategories" :key="cat">
+                    <button @click="selectedCategoryFilter = cat" :class="selectedCategoryFilter === cat ? 'bg-brand-700 text-white shadow-md' : 'bg-white text-slate-700 border border-slate-200 hover:border-brand-300 hover:text-brand-700'" class="rounded-full px-4 py-2 text-xs font-bold capitalize transition" x-text="cat"></button>
+                </template>
+                <span class="ml-auto text-xs font-semibold text-slate-500" x-text="filteredProducts.length + ' catalog items'" aria-live="polite"></span>
+            </div>
+
+            <!-- SHOP MARKETPLACE GRID -->
+            <div x-show="customerTab === 'shop'" class="space-y-6">
+                <template x-if="filteredProducts.length === 0">
+                    <div class="bg-white p-16 rounded-3xl border border-dashed border-slate-300 text-center space-y-4 shadow-sm max-w-2xl mx-auto">
+                        <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center text-4xl mx-auto shadow-inner">
+                            <i class="fas fa-boxes-packing"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-900 font-heading">Marketplace Stock Empty</h3>
+                        <p class="text-sm text-slate-500 max-w-md mx-auto">
+                            No products have been entered into the catalog yet, or none match this search. Staff can add the pharmacy’s own inventory or import an authorized CSV file.
+                        </p>
+                    </div>
+                </template>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <template x-for="item in filteredProducts" :key="item.id">
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-md hover:shadow-2xl hover:border-brand-400 transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+                            
+                            <!-- COLORFUL HEADER & IMAGE CONTAINER -->
+                            <div class="relative h-44 bg-gradient-to-br from-teal-500/10 via-brand-50 to-emerald-500/10 flex items-center justify-center p-4 border-b border-slate-100 group-hover:from-teal-500/20 group-hover:to-brand-100 transition duration-500">
+                                <template x-if="item.imageUrl">
+                                    <img :src="item.imageUrl" :alt="item.name" @error="$event.target.style.display='none'" class="max-h-full max-w-full rounded-xl object-contain drop-shadow-md transition duration-300 group-hover:scale-105">
+                                </template>
+                                <template x-if="!item.imageUrl">
+                                    <div class="w-24 h-24 rounded-2xl bg-white shadow-md flex items-center justify-center text-brand-600 text-4xl group-hover:scale-110 transition duration-300 border border-slate-100">
+                                        <i class="fas fa-pills"></i>
+                                    </div>
+                                </template>
+                                <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-600 text-white shadow-sm" x-text="item.category"></span>
+                                <span class="absolute top-3 right-3 font-mono text-[10px] bg-slate-900/80 backdrop-blur-sm text-slate-100 px-2 py-0.5 rounded-full" x-text="'#' + item.barcode"></span>
+                                <template x-if="item.isRare">
+                                    <span class="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-white shadow-lg"><i class="fas fa-star text-yellow-100"></i><span x-text="lang === 'ar' ? 'نادر / صعب العثور عليه' : 'Marked Rare / Hard to Find'"></span></span>
+                                </template>
+                                <template x-if="item.isOnSale && Number(item.originalPrice) > Number(item.price)">
+                                    <span class="absolute bottom-3 right-3 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-black text-white shadow-lg"><i class="fas fa-tag mr-1"></i><span x-text="lang === 'ar' ? 'خصم' : 'DISCOUNT'"></span></span>
+                                </template>
+                            </div>
+
+                            <!-- CARD DETAILS -->
+                            <div class="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                                <div class="space-y-2">
+                                    <h3 class="font-extrabold text-slate-900 text-lg leading-snug group-hover:text-brand-600 transition" x-text="item.name"></h3>
+                                    
+                                    <template x-if="item.activeIngredient">
+                                        <div class="text-[11px] font-medium text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-xl inline-flex items-center">
+                                            <i class="fas fa-flask text-teal-600 mr-1.5"></i>
+                                            <span x-text="item.activeIngredient"></span>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="item.symptoms">
+                                        <p class="text-xs text-slate-500">
+                                            <i class="fas fa-notes-medical text-rose-400 mr-1"></i> <span x-text="item.symptoms"></span>
+                                        </p>
+                                    </template>
+                                </div>
+
+                                <div class="pt-4 border-t border-slate-100 flex items-end justify-between">
+                                    <div>
+                                        <span class="text-[10px] font-bold text-slate-400 block uppercase" x-text="lang === 'ar' ? 'السعر' : 'Price'"></span>
+                                        <template x-if="item.isOnSale && Number(item.originalPrice) > Number(item.price)">
+                                            <div class="flex flex-col items-start gap-0.5">
+                                                <span class="text-sm font-semibold text-slate-400 line-through" x-text="'EGP ' + Number(item.originalPrice).toFixed(2)"></span>
+                                                <span class="text-2xl font-black text-red-600 tracking-tight" x-text="'EGP ' + Number(item.price).toFixed(2)"></span>
+                                                <span class="text-[10px] font-black text-red-600" x-text="(lang === 'ar' ? 'وفّرت ' : 'YOU SAVE ') + 'EGP ' + (Number(item.originalPrice) - Number(item.price)).toFixed(2)"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!item.isOnSale || Number(item.originalPrice) <= Number(item.price)">
+                                            <span class="text-2xl font-black text-brand-700 tracking-tight" x-text="'EGP ' + Number(item.price).toFixed(2)"></span>
+                                        </template>
+                                    </div>
+                                    <div class="text-right">
+                                        <span :class="item.stock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'" class="px-2.5 py-1 rounded-full text-[10px] font-bold">
+                                            <span x-text="item.stock > 0 ? (lang === 'ar' ? item.stock + ' متوفر' : item.stock + ' in stock') : (lang === 'ar' ? 'نفد المخزون' : 'Out of Stock')"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ACTION BUTTON -->
+                            <div class="p-5 pt-0">
+                                <template x-if="item.stock > 0">
+                                    <button @click="addToCart(item)" class="w-full py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-bold rounded-2xl shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center space-x-2 text-xs">
+                                        <i class="fas fa-cart-plus"></i>
+                                        <span>Add to Cart</span>
+                                    </button>
+                                </template>
+                                <template x-if="item.stock <= 0">
+                                    <button disabled class="w-full py-3 bg-slate-100 text-slate-400 font-bold rounded-2xl text-xs cursor-not-allowed">
+                                        Out of Stock
+                                    </button>
+                                </template>
+                            </div>
+
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- PRESCRIPTION UPLOAD TAB -->
+            <div x-show="customerTab === 'prescription'" class="bg-white p-8 rounded-3xl border border-slate-200 shadow-md max-w-2xl mx-auto space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="w-16 h-16 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-3xl mx-auto">
+                        <i class="fas fa-file-prescription"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold font-heading text-slate-900">Upload Doctor's Prescription</h3>
+                    <p class="text-xs text-slate-500">Upload a photo of your prescription. Pharmacists will fulfill your request directly.</p>
+                </div>
+
+                <form @submit.prevent="submitPrescription()" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Customer Name</label>
+                        <input type="text" x-model="customerAccount.username" readonly class="w-full px-4 py-2.5 border rounded-xl text-xs bg-slate-100 text-slate-600 cursor-not-allowed font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Delivery Address</label>
+                        <input type="text" x-model="customerAccount.location" readonly class="w-full px-4 py-2.5 border rounded-xl text-xs bg-slate-100 text-slate-600 cursor-not-allowed font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Prescription Image File</label>
+                        <input type="file" @change="handlePrescriptionFile($event)" accept="image/*,.pdf" required class="w-full px-4 py-2 border rounded-xl text-xs bg-slate-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Additional Notes</label>
+                        <textarea x-model="prescriptionForm.notes" rows="3" placeholder="Specify dosage or allergies..." class="w-full px-4 py-2.5 border rounded-xl text-xs bg-slate-50"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg transition text-xs">
+                        Submit Prescription Request
+                    </button>
+                </form>
+            </div>
+
+            <!-- CUSTOMER ORDER HISTORY TAB -->
+            <div x-show="customerTab === 'history'" class="space-y-4">
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 font-heading">My Persistent Order History</h3>
+                        <p class="text-xs text-slate-500">Track current and past pharmacy submissions and loyalty rewards earned.</p>
+                    </div>
+                </div>
+
+                <template x-if="customerOrderHistory.length === 0">
+                    <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center text-slate-400 space-y-3">
+                        <i class="fas fa-receipt text-4xl"></i>
+                        <p class="text-sm">No past orders registered yet.</p>
+                    </div>
+                </template>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <template x-for="ord in customerOrderHistory" :key="ord.id">
+                        <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm flex flex-col justify-between">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                                    <div>
+                                        <div class="text-xs font-mono font-bold text-slate-500" x-text="'Order #' + ord.id"></div>
+                                        <div class="text-[10px] text-slate-400" x-text="ord.timestamp"></div>
+                                    </div>
+                                    <span :class="{
+                                        'bg-amber-100 text-amber-800': ord.status === 'Pending',
+                                        'bg-emerald-100 text-emerald-800': ord.status === 'Completed',
+                                        'bg-rose-100 text-rose-800': ord.status === 'Declined'
+                                    }" class="px-3 py-1 font-bold text-[10px] rounded-full uppercase" x-text="ord.status"></span>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <template x-for="item in ord.items" :key="item.id">
+                                        <div class="flex justify-between text-xs text-slate-700">
+                                            <span><strong x-text="item.qty + 'x'"></strong> <span x-text="item.name"></span></span>
+                                            <span class="font-mono text-slate-500" x-text="'EGP ' + (item.price * item.qty).toFixed(2)"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-500">Total Paid</span>
+                                <span class="text-lg font-black text-slate-900" x-text="'EGP ' + ord.total.toFixed(2)"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. WORKER / STAFF PORTAL VIEW -->
+        <section x-show="currentView === 'worker'" class="space-y-8">
+            <div class="flex space-x-3 border-b border-slate-200 pb-4 overflow-x-auto">
+                <button @click="workerTab = 'analytics'" :class="workerTab === 'analytics' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-chart-pie text-brand-400"></i>
+                    <span>Market & Sales Analytics</span>
+                </button>
+                <button @click="workerTab = 'add-stock'" :class="workerTab === 'add-stock' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-plus-circle text-brand-400"></i>
+                    <span>Add Stock & Scanner</span>
+                </button>
+                <button @click="workerTab = 'inventory'" :class="workerTab === 'inventory' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-boxes-stacked"></i>
+                    <span>Stock Directory</span>
+                </button>
+                <button @click="workerTab = 'pos'" :class="workerTab === 'pos' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-cash-register"></i>
+                    <span>POS Checkout</span>
+                </button>
+                <button @click="workerTab = 'orders'" :class="workerTab === 'orders' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Customer Requests</span>
+                    <span class="bg-brand-500 text-white px-2 py-0.5 rounded-full text-[10px]" x-text="orders.filter(o => o.status === 'Pending').length"></span>
+                </button>
+                <button @click="workerTab = 'chat'" :class="workerTab === 'chat' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-comments text-amber-500"></i>
+                    <span>Customer Chat</span>
+                    <span class="bg-amber-500 text-white px-2 py-0.5 rounded-full text-[10px]" x-text="chatMessages.length"></span>
+                </button>
+                <button @click="workerTab = 'loyalty'" :class="workerTab === 'loyalty' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-medal text-amber-500"></i>
+                    <span>Loyalty Tiers</span>
+                </button>
+                <button @click="workerTab = 'backup'" :class="workerTab === 'backup' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-database text-teal-400"></i>
+                    <span>Data Backup & Restore</span>
+                </button>
+            </div>
+
+            <!-- CUSTOMER CHAT TAB -->
+            <div x-show="workerTab === 'chat'" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-5 bg-gradient-to-r from-slate-900 to-brand-800 text-white flex items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-bold text-lg font-heading flex items-center gap-2"><i class="fas fa-comments text-amber-300"></i> Customer Messages</h3>
+                        <p class="text-xs text-white/70">Messages entered in this browser session appear here.</p>
+                    </div>
+                </div>
+                <div class="p-5 min-h-40 max-h-[52vh] overflow-y-auto space-y-3 bg-slate-50">
+                    <template x-if="chatMessages.length === 0">
+                        <div class="py-10 text-center text-slate-400 space-y-2">
+                            <i class="fas fa-comments text-3xl"></i>
+                            <p class="text-sm font-semibold">No customer messages yet</p>
+                            <p class="text-xs">Customer messages will appear here after they send one.</p>
+                        </div>
+                    </template>
+                    <template x-for="msg in chatMessages" :key="msg.id">
+                        <div :class="msg.sender === (activeStaff ? activeStaff.name : '') ? 'text-right' : 'text-left'" class="space-y-1">
+                            <div class="text-[10px] text-slate-400 font-bold" x-text="msg.sender + ' • ' + msg.time"></div>
+                            <div :class="msg.sender === (activeStaff ? activeStaff.name : '') ? 'bg-brand-600 text-white' : 'bg-white text-slate-800 border border-slate-200'" class="inline-block max-w-[85%] rounded-2xl p-3 text-xs shadow-sm text-left" x-text="msg.text"></div>
+                        </div>
+                    </template>
+                </div>
+                <form @submit.prevent="sendWorkerReply()" class="p-4 border-t border-slate-200 flex gap-2 bg-white">
+                    <input type="text" x-model="workerReplyMessage" placeholder="Write a reply" class="min-w-0 flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <button type="submit" class="px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold"><i class="fas fa-paper-plane mr-1"></i> Send</button>
+                </form>
+            </div>
+
+            <!-- MARKET & SALES ANALYTICS TAB -->
+            <div x-show="workerTab === 'analytics'" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue</span>
+                        <h3 class="text-3xl font-black text-brand-700" x-text="'EGP ' + totalAnalyticsRevenue.toFixed(2)"></h3>
+                        <p class="text-[11px] text-emerald-600 font-semibold"><i class="fas fa-arrow-trend-up mr-1"></i> Live POS & Web Sales</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Items in Stock</span>
+                        <h3 class="text-3xl font-black text-slate-900" x-text="totalInventoryUnits"></h3>
+                        <p class="text-[11px] text-brand-600 font-semibold"><i class="fas fa-boxes mr-1"></i> <span x-text="inventory.length"></span> unique SKUs</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Completed Orders</span>
+                        <h3 class="text-3xl font-black text-emerald-600" x-text="orders.filter(o => o.status === 'Completed').length"></h3>
+                        <p class="text-[11px] text-slate-500 font-semibold"><i class="fas fa-check-circle mr-1"></i> Successful transactions</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Prescriptions</span>
+                        <h3 class="text-3xl font-black text-amber-600" x-text="orders.filter(o => o.status === 'Pending').length"></h3>
+                        <p class="text-[11px] text-amber-600 font-semibold"><i class="fas fa-clock mr-1"></i> Awaiting staff review</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-xl font-bold text-slate-900 font-heading">Market Demand Breakdown & Low Stock Warnings</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase">Top Categories in Stock</h4>
+                            <template x-for="cat in availableCategories" :key="cat">
+                                <div class="flex justify-between items-center text-xs p-3 bg-slate-50 rounded-xl border">
+                                    <span class="font-bold text-slate-800" x-text="cat"></span>
+                                    <span class="font-mono text-brand-700 bg-brand-50 px-2 py-1 rounded-lg" x-text="inventory.filter(i => i.category === cat).length + ' products'"></span>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="space-y-3">
+                            <h4 class="text-xs font-bold text-rose-500 uppercase">Low Stock Alerts (&lt; 10 units)</h4>
+                            <template x-for="item in inventory.filter(i => i.stock < 10)" :key="item.id">
+                                <div class="flex justify-between items-center text-xs p-3 bg-rose-50 rounded-xl border border-rose-200">
+                                    <span class="font-bold text-rose-900" x-text="item.name"></span>
+                                    <span class="font-mono text-rose-700 font-bold" x-text="item.stock + ' left'"></span>
+                                </div>
+                            </template>
+                            <template x-if="inventory.filter(i => i.stock < 10).length === 0">
+                                <p class="text-xs text-slate-400 italic p-4 bg-slate-50 rounded-xl">All inventory items are adequately stocked.</p>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD STOCK & SCANNER TAB -->
+            <div x-show="workerTab === 'add-stock'" class="space-y-8">
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-6 gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold font-heading text-slate-900 flex items-center">
+                                <i class="fas fa-boxes-packing text-brand-600 mr-3"></i> Add New Inventory Stock Item
+                            </h2>
+                            <p class="text-xs text-slate-500">Dedicated full-page form with built-in camera barcode scanning and bulk CSV upload capabilities.</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="file" id="fullCsvFileInput" @change="importCSVInventory($event)" accept=".csv" class="hidden">
+                            <button @click="document.getElementById('fullCsvFileInput').click()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center space-x-2 shadow">
+                                <i class="fas fa-file-csv text-brand-400"></i>
+                                <span>Bulk CSV Upload</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CAMERA BARCODE SCANNER INTERFACE -->
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm flex items-center">
+                                    <i class="fas fa-camera text-brand-600 mr-2"></i> Live Camera Barcode Scanner
+                                </h3>
+                                <p class="text-xs text-slate-500">Scan physical barcodes using your webcam or mobile camera to automatically fill the Barcode ID field.</p>
+                            </div>
+                            <button @click="toggleCameraScanner()" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5"
+                                    :class="scannerActive ? 'bg-rose-600 text-white' : 'bg-brand-600 text-white'">
+                                <i class="fas" :class="scannerActive ? 'fa-stop' : 'fa-qrcode'"></i>
+                                <span x-text="scannerActive ? 'Stop Scanner' : 'Activate Camera Scanner'"></span>
+                            </button>
+                        </div>
+
+                        <div x-show="scannerActive" class="max-w-md mx-auto bg-black rounded-2xl overflow-hidden p-2 shadow-inner">
+                            <div id="barcode-reader"></div>
+                        </div>
+                    </div>
+
+                    <!-- FULL FORM -->
+                    <form @submit.prevent="saveInventoryItem()" class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Barcode Number / ID *</label>
+                            <input type="text" x-model="modalForm.barcode" placeholder="Enter barcode" required class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 font-mono focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Product Name *</label>
+                            <input type="text" x-model="modalForm.name" placeholder="Enter product name" required class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Active Ingredient</label>
+                            <input type="text" x-model="modalForm.activeIngredient" placeholder="Enter active ingredient" class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Symptoms / Medical Tags</label>
+                            <input type="text" x-model="modalForm.symptoms" placeholder="Enter symptoms or tags" class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Category *</label>
+                            <input type="text" x-model="modalForm.category" placeholder="Enter category" required class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Retail Price (EGP) *</label>
+                            <input type="number" step="0.5" x-model.number="modalForm.price" placeholder="Enter price in EGP" required class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Initial Stock Quantity *</label>
+                            <input type="number" x-model.number="modalForm.stock" placeholder="Enter stock quantity" required class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Batch Expiry Date</label>
+                            <input type="date" x-model="modalForm.expiryDate" class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Product Image URL (Optional)</label>
+                            <input type="url" x-model="modalForm.imageUrl" placeholder="Paste product image URL" class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                        </div>
+
+                        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="rounded-2xl border border-rose-200 bg-rose-50/70 p-4 flex items-center justify-between gap-4">
+                                <div>
+                                    <div class="font-extrabold text-rose-800 text-sm"><i class="fas fa-tags mr-2"></i>Discount Price</div>
+                                    <p class="text-xs text-rose-700 mt-1" x-text="modalForm.isOnSale ? ('Before: EGP ' + Number(discountForm.before || 0).toFixed(2) + ' · After: EGP ' + Number(discountForm.after || 0).toFixed(2)) : 'Optional: show the old price and the discounted price to customers.'"></p>
+                                </div>
+                                <button type="button" @click="openDiscountModal()" class="shrink-0 rounded-xl px-4 py-2.5 text-xs font-black shadow-sm transition" :class="modalForm.isOnSale ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-white text-rose-700 border border-rose-300 hover:bg-rose-100'" x-text="modalForm.isOnSale ? 'Edit Discount' : 'Set Discount'"></button>
+                            </div>
+                            <button type="button" @click="modalForm.isRare = !modalForm.isRare" :aria-pressed="modalForm.isRare ? 'true' : 'false'" class="rounded-2xl border p-4 flex items-center gap-4 text-left transition" :class="modalForm.isRare ? 'border-amber-400 bg-amber-100 text-amber-900 shadow-inner' : 'border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:bg-amber-50'">
+                                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-xl" :class="modalForm.isRare ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-500'"><i class="fas fa-star"></i></span>
+                                <span><span class="block font-extrabold text-sm">Marked as rare or hard to find</span><span class="block text-xs mt-1 opacity-80" x-text="modalForm.isRare ? 'Customers will see a star badge on this item.' : 'Click to show the star badge to customers.'"></span></span>
+                            </button>
+                        </div>
+
+                        <div class="md:col-span-2 pt-4 flex justify-end space-x-3">
+                            <button type="button" @click="resetForm()" class="px-6 py-3 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Reset Form</button>
+                            <button type="submit" class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-brand-600/20">
+                                Save Stock Item to Directory
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- STOCK DIRECTORY TAB -->
+            <div x-show="workerTab === 'inventory'" class="space-y-4">
+                <div class="bg-white rounded-2xl shadow border border-slate-200 p-4 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800">Pharmacy Stock Directory</h3>
+                    <button @click="workerTab = 'add-stock'" class="bg-brand-600 text-white px-3 py-2 rounded-xl text-xs font-bold">+ Add Item</button>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-[11px] font-bold">
+                            <tr>
+                                <th class="p-3">Barcode</th>
+                                <th class="p-3">Item Name</th>
+                                <th class="p-3">Category</th>
+                                <th class="p-3">Price</th>
+                                <th class="p-3">Stock Level</th>
+                                <th class="p-3 text-center">Quick Stock Bump</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <template x-for="item in inventory" :key="item.id">
+                                <tr>
+                                    <td class="p-3 font-mono text-xs" x-text="item.barcode"></td>
+                                    <td class="p-3 font-bold" x-text="item.name"></td>
+                                    <td class="p-3 text-xs" x-text="item.category"></td>
+                                    <td class="p-3 text-brand-700 font-bold" x-text="'EGP ' + parseFloat(item.price).toFixed(2)"></td>
+                                    <td class="p-3" x-text="item.stock"></td>
+                                    <td class="p-3 text-center space-x-1">
+                                        <button @click="bumpStock(item.id, 10)" class="px-2.5 py-1 bg-slate-100 border text-xs rounded-lg font-bold hover:bg-brand-600 hover:text-white">+10</button>
+                                        <button @click="bumpStock(item.id, 50)" class="px-2.5 py-1 bg-slate-100 border text-xs rounded-lg font-bold hover:bg-brand-600 hover:text-white">+50</button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- POS CHECKOUT VIEW -->
+            <div x-show="workerTab === 'pos'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                        <input type="text" x-model="posSearch" placeholder="Search stock by name or barcode..." class="w-full px-4 py-2 bg-slate-50 border rounded-lg text-sm">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <template x-for="item in filteredPosInventory" :key="item.id">
+                            <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm" x-text="item.name"></h3>
+                                    <span class="text-xs text-slate-500" x-text="lang === 'ar' ? item.stock + ' متوفر' : item.stock + ' in stock'"></span>
+                                </div>
+                                <div class="flex items-center justify-between pt-2 border-t">
+                                    <span class="font-bold text-brand-700 text-sm" x-text="'EGP ' + parseFloat(item.price).toFixed(2)"></span>
+                                    <button @click="addToCart(item)" class="bg-brand-600 text-white p-2 rounded-lg text-xs"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- STAFF ACTIVE CART & RECEIPT -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h3 class="font-bold text-slate-800 text-base">Active Sales Cart</h3>
+                    <div class="space-y-2 max-h-[300px] overflow-y-auto">
+                        <template x-for="cItem in cart" :key="cItem.id">
+                            <div class="flex justify-between items-center text-xs p-2 bg-slate-50 rounded border">
+                                <div>
+                                    <div class="font-bold" x-text="cItem.name"></div>
+                                    <div class="text-slate-400" x-text="cItem.qty + ' x EGP ' + parseFloat(cItem.price).toFixed(2)"></div>
+                                </div>
+                                <span class="font-bold" x-text="'EGP ' + (cItem.price * cItem.qty).toFixed(2)"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="pt-4 border-t flex justify-between font-black text-lg">
+                        <span>Total:</span>
+                        <span class="text-brand-700" x-text="'EGP ' + cartSubtotal.toFixed(2)"></span>
+                    </div>
+                    <div class="space-y-2">
+                        <button @click="checkoutOrder()" :disabled="cart.length === 0" class="w-full py-3 bg-brand-600 text-white font-bold rounded-lg disabled:bg-slate-300 text-xs">
+                            Complete Sale & Sync Stock
+                        </button>
+                        <button @click="printReceipt()" :disabled="cart.length === 0" class="w-full py-2 bg-slate-800 text-white font-bold rounded-lg disabled:bg-slate-300 text-xs flex items-center justify-center space-x-1">
+                            <i class="fas fa-print"></i>
+                            <span>Print POS Thermal Receipt</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ORDER REQUESTS TAB -->
+            <div x-show="workerTab === 'orders'" class="space-y-4">
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                    <h3 class="text-xl font-bold text-slate-900 font-heading">Incoming Customer Requests</h3>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <template x-for="ord in orders" :key="ord.id">
+                        <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm">
+                            <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                                <div>
+                                    <div class="text-xs font-mono font-bold text-slate-500" x-text="'Order #' + ord.id"></div>
+                                    <div class="text-xs text-slate-800 font-bold" x-text="ord.customerName"></div>
+                                    <div class="text-[10px] text-slate-400" x-text="ord.timestamp"></div>
+                                </div>
+                                <span :class="{
+                                    'bg-amber-100 text-amber-800': ord.status === 'Pending',
+                                    'bg-emerald-100 text-emerald-800': ord.status === 'Completed',
+                                    'bg-rose-100 text-rose-800': ord.status === 'Declined'
+                                }" class="px-3 py-1 font-bold text-[10px] rounded-full uppercase" x-text="ord.status"></span>
+                            </div>
+
+                            <template x-if="ord.prescriptionImage">
+                                <div class="p-2 bg-slate-50 rounded-xl border text-xs">
+                                    <span class="font-bold block mb-1">Prescription Attachment:</span>
+                                    <span class="text-brand-600 underline font-mono cursor-pointer" @click="showToast('Prescription photo loaded')">View Image File</span>
+                                    <p class="text-[11px] text-slate-500 mt-1" x-text="ord.notes"></p>
+                                </div>
+                            </template>
+
+                            <div class="space-y-1">
+                                <template x-for="item in ord.items" :key="item.id">
+                                    <div class="flex justify-between text-xs text-slate-700">
+                                        <span><strong x-text="item.qty + 'x'"></strong> <span x-text="item.name"></span></span>
+                                        <span class="font-mono text-slate-500" x-text="'EGP ' + (item.price * item.qty).toFixed(2)"></span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-500">Total</span>
+                                <span class="text-lg font-black text-slate-900" x-text="'EGP ' + ord.total.toFixed(2)"></span>
+                            </div>
+
+                            <template x-if="ord.status === 'Pending'">
+                                <div class="flex space-x-2 pt-2">
+                                    <button @click="ord.status = 'Completed'; showToast('Order approved!');" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs">Approve</button>
+                                    <button @click="ord.status = 'Declined'; showToast('Order declined.', 'error');" class="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs">Decline</button>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- LOYALTY TIER CUSTOMISATION -->
+            <div x-show="workerTab === 'loyalty'" class="space-y-6">
+                <div class="rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-indigo-50 p-6 shadow-sm">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 text-2xl"><i class="fas fa-medal"></i></div>
+                        <div><h3 class="text-xl font-black text-slate-900">Customer Loyalty Tiers</h3><p class="mt-1 text-sm text-slate-600">Set your pharmacy's own discount percentage for each membership tier. The selected customer's tier and discount are shown in the customer portal. Tier discounts apply to non-sale items at checkout; sale prices are not discounted twice.</p></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <template x-for="tier in ['Bronze','Silver','Gold','Platinum']" :key="tier">
+                        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h4 class="font-black text-slate-900" x-text="tier"></h4>
+                                <span class="rounded-full px-3 py-1 text-xs font-black" :class="tier === 'Bronze' ? 'bg-amber-100 text-amber-800' : tier === 'Silver' ? 'bg-slate-200 text-slate-800' : tier === 'Gold' ? 'bg-yellow-100 text-yellow-800' : 'bg-indigo-100 text-indigo-800'" x-text="Number(loyaltyTiers[tier].discount) + '% OFF'"></span>
+                            </div>
+                            <label class="block text-xs font-bold text-slate-600 mb-2" :for="'tier-discount-' + tier">Discount percentage (%)</label>
+                            <input type="number" min="0" max="100" step="0.5" :id="'tier-discount-' + tier" x-model.number="loyaltyTiers[tier].discount" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <p class="mt-2 text-[11px] text-slate-500" x-text="tier === 'Bronze' ? 'Default entry tier' : tier === 'Silver' ? 'Earned after 50 loyalty points' : tier === 'Gold' ? 'Earned after 120 loyalty points' : 'Earned after 250 loyalty points'"></p>
+                        </div>
+                    </template>
+                </div>
+                <div class="flex justify-end"><button type="button" @click="saveLoyaltyTiers()" class="rounded-xl bg-brand-600 px-6 py-3 text-sm font-black text-white shadow-lg hover:bg-brand-700"><i class="fas fa-save mr-2"></i>Save Tier Discounts</button></div>
+            </div>
+
+            <!-- DATA BACKUP & RESTORE TAB -->
+            <div x-show="workerTab === 'backup'" class="space-y-6">
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 max-w-2xl mx-auto">
+                    <div class="text-center space-y-2">
+                        <div class="w-16 h-16 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-3xl mx-auto shadow-inner">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-heading text-slate-900">Database Backup & Restore Manager</h3>
+                        <p class="text-xs text-slate-500">Export all inventory and order history into a secure JSON file, or restore data instantly from a previous backup.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                        <button @click="exportDataBackup()" class="py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center space-x-2 text-xs">
+                            <i class="fas fa-download"></i>
+                            <span>Export Backup (.JSON)</span>
+                        </button>
+
+                        <label class="py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center space-x-2 text-xs cursor-pointer">
+                            <i class="fas fa-upload"></i>
+                            <span>Restore From Backup (.JSON)</span>
+                            <input type="file" @change="importDataBackup($event)" accept=".json" class="hidden">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PRINTABLE POS THERMAL RECEIPT CONTAINER -->
+    <div id="printable-receipt" class="hidden print:block p-4 font-mono text-xs text-black">
+        <div class="text-center font-bold text-sm mb-2">
+            AL-TAWFIQIA PHARMACY<br>
+            صيدلية التوفيقية
+        </div>
+        <div class="border-b border-black my-2"></div>
+        <div class="flex justify-between">
+            <span>Date: <span x-text="new Date().toLocaleDateString()"></span></span>
+            <span>Time: <span x-text="new Date().toLocaleTimeString()"></span></span>
+        </div>
+        <div class="border-b border-black my-2"></div>
+        <template x-for="item in cart" :key="item.id">
+            <div class="flex justify-between my-1">
+                <span x-text="item.qty + 'x ' + item.name"></span>
+                <span x-text="'EGP ' + (item.price * item.qty).toFixed(2)"></span>
+            </div>
+        </template>
+        <div class="border-b border-black my-2"></div>
+        <div class="flex justify-between font-bold text-sm">
+            <span>TOTAL:</span>
+            <span x-text="'EGP ' + cartSubtotal.toFixed(2)"></span>
+        </div>
+        <div class="text-center mt-4">Thank you for choosing Al-Tawfiqia!</div>
+    </div>
+
+    <!-- MODAL: CUSTOMER LOGIN WITH EXPLICIT EXIT BUTTON -->
+    <div x-cloak x-show="customerAuthModalOpen" @click.self="customerAuthModalOpen = false" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 space-y-6 relative border border-slate-100">
+            <!-- EXPLICIT X CLOSE BUTTON -->
+            <button type="button" aria-label="Close customer login" title="Close" @click="customerAuthModalOpen = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center transition">
+                <i class="fas fa-times text-base"></i>
+            </button>
+
+            <div class="text-center space-y-2">
+                <div class="w-16 h-16 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-3xl mx-auto shadow-inner">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h3 class="text-2xl font-bold font-heading text-slate-900">Customer Access Login</h3>
+                <p class="text-xs text-slate-500">Provide your details to earn loyalty badge tiers and order from Al-Tawfiqia Pharmacy marketplace.</p>
+            </div>
+
+            <form @submit.prevent="submitCustomerLogin()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                    <input type="text" x-model="customerLoginForm.username" placeholder="Enter your full name" required class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Delivery Location / Address *</label>
+                    <input type="text" x-model="customerLoginForm.location" placeholder="Enter delivery address" required class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+                    <input type="tel" x-model="customerLoginForm.phone" placeholder="Enter phone number" required class="w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-600/30 transition text-sm">
+                    Access Marketplace
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CUSTOMER PHARMACIST CHAT DRAWER -->
+    <div x-cloak x-show="chatOpen" x-transition class="fixed inset-0 z-[60] flex justify-end bg-slate-900/50 backdrop-blur-sm" @click.self="chatOpen = false">
+        <section class="flex h-full w-full max-w-md flex-col bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="Ask pharmacist">
+            <header class="flex items-start justify-between gap-4 bg-gradient-to-r from-amber-500 to-orange-500 p-5 text-white">
+                <div>
+                    <h3 class="flex items-center gap-2 font-bold text-lg"><i class="fas fa-comments"></i> Ask Pharmacist</h3>
+                    <p class="mt-1 text-xs text-white/85">Send a message to the pharmacy team.</p>
+                </div>
+                <button type="button" @click="chatOpen = false" aria-label="Close pharmacist chat" title="Close" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/35 focus:outline-none focus:ring-2 focus:ring-white">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </header>
+            <div class="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
+                <template x-if="chatMessages.length === 0">
+                    <div class="py-10 text-center text-slate-400 space-y-2">
+                        <i class="fas fa-comments text-3xl"></i>
+                        <p class="text-sm font-semibold">Start a conversation</p>
+                        <p class="text-xs">Messages are stored only in this open app session.</p>
+                    </div>
+                </template>
+                <template x-for="msg in chatMessages" :key="msg.id">
+                    <div :class="msg.sender === (customerAccount.username || 'Customer') ? 'text-right' : 'text-left'" class="space-y-1">
+                        <div class="text-[10px] font-bold text-slate-400" x-text="msg.sender + ' • ' + msg.time"></div>
+                        <div :class="msg.sender === (customerAccount.username || 'Customer') ? 'bg-brand-600 text-white' : 'border border-slate-200 bg-white text-slate-800'" class="inline-block max-w-[85%] rounded-2xl p-3 text-left text-xs shadow-sm" x-text="msg.text"></div>
+                    </div>
+                </template>
+            </div>
+            <form @submit.prevent="sendChatMessage()" class="flex gap-2 border-t border-slate-200 bg-white p-4">
+                <input type="text" x-model="newChatMessage" placeholder="Write your message" class="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <button type="submit" class="rounded-xl bg-brand-600 px-4 py-3 text-xs font-bold text-white hover:bg-brand-700"><i class="fas fa-paper-plane mr-1"></i> Send</button>
+            </form>
+        </section>
+    </div>
+
+    <!-- MODAL: CART DRAWER WITH EXPLICIT EXIT BUTTON -->
+    <div x-cloak x-show="cartDrawerOpen" @click.self="cartDrawerOpen = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex justify-end">
+        <div class="bg-white max-w-md w-full h-full p-6 shadow-2xl flex flex-col justify-between relative">
+            <button type="button" aria-label="Close shopping cart" title="Close" @click="cartDrawerOpen = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center transition">
+                <i class="fas fa-times text-base"></i>
+            </button>
+
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-slate-900 font-heading flex items-center">
+                    <i class="fas fa-shopping-basket text-brand-600 mr-2"></i> Your Shopping Cart
+                </h3>
+                <div class="space-y-2 max-h-[60vh] overflow-y-auto">
+                    <template x-for="cItem in cart" :key="cItem.id">
+                        <div class="flex justify-between items-center text-xs p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <div>
+                                <div class="font-bold text-slate-800" x-text="cItem.name"></div>
+                                <div class="text-slate-500" x-text="cItem.qty + ' x EGP ' + parseFloat(cItem.price).toFixed(2)"></div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-slate-900" x-text="'EGP ' + (cItem.price * cItem.qty).toFixed(2)"></span>
+                                <button @click="removeFromCart(cItem.id)" class="text-rose-500 hover:text-rose-700 p-1"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="space-y-3 border-t pt-4">
+                <div x-show="cartLoyaltyDiscount > 0" class="flex justify-between items-center rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs font-bold text-emerald-800">
+                    <span x-text="(lang === 'ar' ? 'خصم الولاء (' : 'Loyalty tier discount (') + customerLoyaltyTier.discount + '%)'"></span>
+                    <span x-text="'- EGP ' + cartLoyaltyDiscount.toFixed(2)"></span>
+                </div>
+                <div class="flex justify-between text-base font-black">
+                    <span>Total Amount:</span>
+                    <span class="text-brand-700" x-text="'EGP ' + cartSubtotal.toFixed(2)"></span>
+                </div>
+                <button @click="checkoutOrder(); cartDrawerOpen = false;" :disabled="cart.length === 0" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-600/20 transition disabled:bg-slate-300">
+                    Submit Marketplace Order
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: STAFF AUTHENTICATION WITH EXPLICIT EXIT BUTTON -->
+    <div x-cloak x-show="showAuthModal" @click.self="showAuthModal = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 text-center relative">
+            <button type="button" aria-label="Close staff login" title="Close" @click="showAuthModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center transition">
+                <i class="fas fa-times text-base"></i>
+            </button>
+
+            <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 mx-auto flex items-center justify-center text-xl font-bold">
+                <i class="fas fa-user-lock"></i>
+            </div>
+            <h3 class="font-bold text-slate-900 text-lg">Staff Cloud Login</h3>
+            <p class="text-xs text-slate-500">Sign in with the staff user created in Firebase Authentication. No account is created by this form.</p>
+            <form @submit.prevent="authenticateStaff()" class="space-y-3">
+                <label class="block text-left text-xs font-bold text-slate-600">Staff email</label>
+                <input type="email" x-model.trim="staffEmailInput" autocomplete="username" placeholder="Staff email address" required class="w-full px-4 py-2.5 border rounded-xl text-sm bg-slate-50">
+                <label class="block text-left text-xs font-bold text-slate-600">Password</label>
+                <input type="password" x-model="staffPasswordInput" autocomplete="current-password" placeholder="Firebase password" required class="w-full px-4 py-2.5 border rounded-xl text-sm bg-slate-50">
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition">Sign in and sync data</button>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- SET PRODUCT DISCOUNT MODAL -->
+    <div x-cloak x-show="discountModalOpen" x-transition class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/65 backdrop-blur-sm p-4" @click.self="discountModalOpen = false" @keydown.escape.window="discountModalOpen = false">
+        <section role="dialog" aria-modal="true" aria-labelledby="discount-modal-title" class="relative w-full max-w-lg rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl sm:p-8">
+            <button type="button" @click="discountModalOpen = false" aria-label="Close discount window" title="Close" class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:bg-rose-100 hover:text-rose-700"><i class="fas fa-times"></i></button>
+            <div class="mb-6 flex items-center gap-4">
+                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 text-2xl"><i class="fas fa-tags"></i></div>
+                <div><h3 id="discount-modal-title" class="text-xl font-black text-slate-900">Set Discount Prices</h3><p class="mt-1 text-xs text-slate-500">Enter the original price and the new discounted price.</p></div>
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <label for="discount-before" class="mb-2 block text-xs font-black uppercase tracking-wide text-slate-600">Price Before (EGP)</label>
+                    <input id="discount-before" type="number" min="0.01" step="0.01" x-model.number="discountForm.before" placeholder="Price before discount" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-lg font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <p class="mt-2 text-xs font-semibold text-slate-400 line-through" x-text="discountForm.before !== '' ? 'EGP ' + Number(discountForm.before).toFixed(2) : 'Original price appears crossed out'"></p>
+                </div>
+                <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                    <label for="discount-after" class="mb-2 block text-xs font-black uppercase tracking-wide text-rose-700">Price After (EGP)</label>
+                    <input id="discount-after" type="number" min="0" step="0.01" x-model.number="discountForm.after" placeholder="New discounted price" class="w-full rounded-xl border border-rose-200 bg-white px-3 py-3 text-lg font-black text-red-600 focus:outline-none focus:ring-2 focus:ring-rose-400">
+                    <p class="mt-2 text-xl font-black text-red-600" x-text="discountForm.after !== '' ? 'EGP ' + Number(discountForm.after).toFixed(2) : 'New price appears in red'"></p>
+                </div>
+            </div>
+            <p class="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900"><i class="fas fa-circle-info mr-1"></i> Customers will see the original price crossed out and the new price in bold red. The new price is used for checkout.</p>
+            <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" @click="discountModalOpen = false" class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50">Cancel</button>
+                <button type="button" @click="applyDiscount()" class="rounded-xl bg-rose-600 px-5 py-3 text-sm font-black text-white shadow-lg hover:bg-rose-700"><i class="fas fa-check mr-2"></i>Apply Discount</button>
+                <button type="button" x-show="modalForm.isOnSale" @click="clearDiscount()" class="rounded-xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-200">Remove Discount</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ALPINE JS PERSISTENT STATE LOGIC -->
+    <script>
+        function pharmacyApp() {
+            const interfaceTranslations = {
+                'Welcome to Al-Tawfiqia • صيدلية التوفيقية':'مرحبًا بكم في صيدلية التوفيقية',
+                'Your Trusted Partner in':'شريككم الموثوق في', 'Health, Care & Wellness':'الصحة والرعاية والعافية',
+                'Select your access portal below to browse our marketplace, check your loyalty badge level, or login to manage pharmacy inventory and client orders.':'اختر بوابتك لتصفح المتجر أو متابعة مزايا الولاء أو إدارة المخزون وطلبات العملاء.',
+                'Preserving Health & Quality Care Always':'للحفاظ على الصحة وتقديم رعاية عالية الجودة دائمًا','Helpline 24/7':'خط المساعدة على مدار الساعة','Requires Login (Name, Location & Phone). Browse catalog, earn Loyalty Tiers (Bronze to Platinum), and upload doctor prescriptions.':'يتطلب تسجيل الدخول بالاسم والموقع والهاتف. تصفح الكتالوج واستفد من مستويات الولاء وارفع الروشتات الطبية.',
+                'Protected access for Al-Tawfiqia staff. Includes market analytics, barcode scanner, full inventory management, and backup tools.':'دخول محمي لموظفي التوفيقية، يشمل تحليلات السوق وماسح الباركود وإدارة المخزون والنسخ الاحتياطي.',
+                'Market Analysis & Revenue Metrics':'تحليل السوق ومؤشرات الإيرادات','JSON Data Backup & Restore Manager':'مدير نسخ واستعادة بيانات JSON','Camera Barcode Scanner & POS Checkout':'ماسح باركود بالكاميرا ونقطة البيع',
+                'No customer messages yet':'لا توجد رسائل عملاء بعد','Customer messages will appear here after they send one.':'ستظهر رسائل العملاء هنا بعد إرسالها.',
+                'Live POS & Web Sales':'مبيعات نقطة البيع والمتجر','Total Items in Stock':'إجمالي المنتجات في المخزون','unique SKUs':'أصناف فريدة','Completed Orders':'الطلبات المكتملة','Successful transactions':'المعاملات الناجحة','Pending Prescriptions':'روشتات قيد الانتظار','Awaiting staff review':'بانتظار مراجعة الموظفين',
+                'Market Demand Breakdown & Low Stock Warnings':'تحليل الطلب في السوق وتنبيهات انخفاض المخزون','Top Categories in Stock':'أكثر الفئات توفرًا','Low Stock Alerts (< 10 units)':'تنبيهات انخفاض المخزون (أقل من 10 وحدات)','All inventory items are adequately stocked.':'مستويات المخزون لجميع المنتجات كافية.',
+                'Add New Inventory Stock Item':'إضافة منتج جديد للمخزون','Dedicated full-page form with built-in camera barcode scanning and bulk CSV upload capabilities.':'نموذج كامل لإضافة المخزون مع مسح الباركود بالكاميرا واستيراد ملفات CSV دفعة واحدة.',
+                'Bulk CSV Upload':'استيراد CSV جماعي','Date:':'التاريخ:','Time:':'الوقت:','AL-TAWFIQIA PHARMACY':'صيدلية التوفيقية','Thank you for choosing Al-Tawfiqia!':'شكرًا لاختيار صيدلية التوفيقية!',
+                'No past orders registered yet.':'لا توجد طلبات سابقة مسجلة بعد.','My Persistent Order History':'سجل طلباتي الدائم','Total Paid':'إجمالي المدفوع',
+                'Bulk CSV items imported into inventory!':'تم استيراد المنتجات من CSV إلى المخزون!','Order approved!':'تمت الموافقة على الطلب!','Order declined.':'تم رفض الطلب.',
+                "Set your pharmacy's own discount percentage for each membership tier. The selected customer's tier and discount are shown in the customer portal. Tier discounts apply to non-sale items at checkout; sale prices are not discounted twice.":'حدد نسبة الخصم لكل مستوى ولاء في صيدليتك. يظهر مستوى العميل وخصمه في بوابة العملاء. تطبق خصومات الولاء على المنتجات غير المخفضة فقط لتجنب تكرار الخصم.',
+                'Save Stock Item to Directory':'حفظ المنتج في دليل المخزون','Product Image URL (Optional)':'رابط صورة المنتج (اختياري)','Initial Stock Quantity *':'كمية المخزون الأولية *','Batch Expiry Date':'تاريخ انتهاء التشغيلة',
+                'Bronze':'برونزي','Silver':'فضي','Gold':'ذهبي','Platinum':'بلاتيني','Authenticate Staff Passcode':'تسجيل دخول الموظفين','Staff Cloud Login':'دخول الموظفين إلى السحابة','Restore From Backup (.JSON)':'استعادة من نسخة احتياطية (JSON)','+10':'+١٠','+50':'+٥٠','Enter your full name':'أدخل اسمك الكامل','Specify dosage or allergies...':'حدد الجرعة أو الحساسية...','Write a reply':'اكتب ردًا','Ask pharmacist':'اسأل الصيدلي','Close customer login':'إغلاق تسجيل دخول العميل','Close discount window':'إغلاق نافذة الخصم','Close pharmacist chat':'إغلاق محادثة الصيدلي','Close shopping cart':'إغلاق سلة التسوق','Close staff login':'إغلاق تسجيل دخول الموظف',
+                'Customer Marketplace':'متجر العملاء','Staff & Worker Portal':'بوابة الموظفين والصيادلة','Login & Enter Store':'تسجيل الدخول إلى المتجر',
+                'Amazon-Style Colorful Product Cards':'بطاقات منتجات ملونة','Customer Loyalty Badge System':'نظام شارات ولاء العملاء','Persistent Order History':'سجل الطلبات',
+                'Market & Sales Analytics':'تحليلات السوق والمبيعات','Add Stock & Scanner':'إضافة مخزون وماسح','Stock Directory':'دليل المخزون','POS Checkout':'نقطة البيع',
+                'Customer Requests':'طلبات العملاء','Customer Chat':'محادثة العملاء','Data Backup & Restore':'نسخ البيانات واستعادتها','Loyalty Tiers':'مستويات الولاء',
+                'Al-Tawfiqia Marketplace':'متجر التوفيقية','Browse your pharmacy catalog':'تصفح كتالوج الصيدلية','Explore the items added by pharmacy staff, compare listed prices and stock, and place items in your cart. Only your pharmacy’s entered inventory appears below.':'تصفح المنتجات التي أضافها موظفو الصيدلية، وقارن الأسعار والمخزون، وأضف المنتجات إلى السلة. تظهر هنا المنتجات المسجلة في مخزون صيدليتك فقط.',
+                'Catalog browsing':'تصفح المنتجات','Prescription requests':'طلبات الروشتات','Pharmacist chat':'محادثة الصيدلي','All Categories':'كل الفئات','Marketplace Stock Empty':'المخزون غير متاح حاليًا',
+                'No products have been entered into the catalog yet, or none match this search. Staff can add the pharmacy’s own inventory or import an authorized CSV file.':'لم تتم إضافة منتجات للكتالوج بعد أو لا توجد نتائج مطابقة. يمكن للموظفين إضافة مخزون الصيدلية أو استيراد ملف CSV معتمد.',
+                'Price':'السعر','Add to Cart':'أضف إلى السلة','Out of Stock':'نفد المخزون','Marked Rare / Hard to Find':'نادر / يصعب العثور عليه','DISCOUNT':'خصم','YOU SAVE ':'وفرت ',
+                'Marketplace':'المتجر','Prescription':'الروشتة','My Orders':'طلباتي','Ask Pharmacist':'اسأل الصيدلي','Loyalty Points':'نقاط الولاء','Loyalty tier discount (':'خصم مستوى الولاء (',
+                'Upload Doctor’s Prescription':'رفع روشتة الطبيب','Upload a photo of your prescription. Pharmacists will fulfill your request directly.':'ارفع صورة الروشتة وسيراجع الصيادلة طلبك.',
+                'Customer Name':'اسم العميل','Delivery Address':'عنوان التوصيل','Prescription Image File':'ملف صورة الروشتة','Additional Notes':'ملاحظات إضافية','Submit Prescription Request':'إرسال طلب الروشتة',
+                'No past orders registered yet.':'لا توجد طلبات سابقة مسجلة بعد.','Track current and past pharmacy submissions and loyalty rewards earned.':'تابع الطلبات الحالية والسابقة ومكافآت الولاء المكتسبة.',
+                'Live Camera Barcode Scanner':'ماسح الباركود بالكاميرا','Scan physical barcodes using your webcam or mobile camera to automatically fill the Barcode ID field.':'امسح الباركود بكاميرا الجهاز لتعبئة رقم الباركود تلقائيًا.',
+                'Stop Scanner':'إيقاف الماسح','Activate Camera Scanner':'تشغيل ماسح الكاميرا','Barcode Number / ID *':'رقم الباركود / المعرّف *','Product Name *':'اسم المنتج *',
+                'Active Ingredient':'المادة الفعالة','Symptoms / Medical Tags':'الأعراض / الوسوم الطبية','Category *':'الفئة *','Retail Price (EGP) *':'سعر البيع (جنيه) *',
+                'Initial Stock Quantity *':'كمية المخزون الأولية *','Batch Expiry Date':'تاريخ انتهاء التشغيلة','Product Image URL (Optional)':'رابط صورة المنتج (اختياري)',
+                'Reset Form':'إعادة ضبط النموذج','Save Stock Item to Directory':'حفظ المنتج في دليل المخزون','Pharmacy Stock Directory':'دليل مخزون الصيدلية','+ Add Item':'＋ إضافة منتج',
+                'Barcode':'الباركود','Item Name':'اسم المنتج','Price':'السعر','Stock Level':'كمية المخزون','Quick Stock Bump':'زيادة سريعة للمخزون','Active Sales Cart':'سلة المبيعات الحالية',
+                'Total:':'الإجمالي:','Complete Sale & Sync Stock':'إتمام البيع وتحديث المخزون','Print POS Thermal Receipt':'طباعة إيصال نقطة البيع','Search stock by name or barcode...':'ابحث بالاسم أو الباركود...',
+                'Incoming Customer Requests':'طلبات العملاء الواردة','Customer Messages':'رسائل العملاء','Messages entered in this browser session appear here.':'تظهر الرسائل المسجلة في جلسة المتصفح الحالية هنا.',
+                'Set Discount Prices':'تحديد أسعار الخصم','Enter the original price and the new discounted price.':'أدخل السعر الأصلي والسعر الجديد بعد الخصم.',
+                'Price Before (EGP)':'السعر قبل الخصم (جنيه)','Price After (EGP)':'السعر بعد الخصم (جنيه)','Original price appears crossed out':'سيظهر السعر الأصلي مشطوبًا','New price appears in red':'سيظهر السعر الجديد بالأحمر',
+                'Customers will see the original price crossed out and the new price in bold red. The new price is used for checkout.':'سيرى العملاء السعر الأصلي مشطوبًا والسعر الجديد بالأحمر العريض. يُستخدم السعر الجديد عند الدفع.',
+                'Apply Discount':'تطبيق الخصم','Remove Discount':'إزالة الخصم','Cancel':'إلغاء','Discount Price':'سعر الخصم','Set Discount':'تحديد الخصم','Edit Discount':'تعديل الخصم',
+                'Marked as rare or hard to find':'تحديد كمنتج نادر أو صعب العثور عليه','Customers will see a star badge on this item.':'ستظهر شارة نجمة لهذا المنتج لدى العملاء.','Click to show the star badge to customers.':'اضغط لإظهار شارة النجمة للعملاء.',
+                'Customer Loyalty Tiers':'مستويات ولاء العملاء','Set your pharmacy’s own discount percentage for each membership tier. The selected customer’s tier and discount are shown in the customer portal. Tier discounts apply to non-sale items at checkout; sale prices are not discounted twice.':'حدد نسبة الخصم لكل مستوى ولاء في صيدليتك. يظهر مستوى العميل وخصمه في بوابة العملاء. تطبق خصومات الولاء على المنتجات غير المخفضة فقط لتجنب تكرار الخصم.',
+                'Discount percentage (%)':'نسبة الخصم (%)','Default entry tier':'المستوى الأساسي','Earned after 50 loyalty points':'يُكتسب بعد 50 نقطة ولاء','Earned after 120 loyalty points':'يُكتسب بعد 120 نقطة ولاء','Earned after 250 loyalty points':'يُكتسب بعد 250 نقطة ولاء','Save Tier Discounts':'حفظ خصومات المستويات',
+                'Data Backup & Restore':'نسخ البيانات واستعادتها','Switch Portal':'تبديل البوابة','Cart':'السلة','Your Shopping Cart':'سلة التسوق','Total Amount:':'الإجمالي:','Submit Marketplace Order':'إرسال طلب المتجر',
+                'Staff Passcode Access':'دخول الموظفين','Enter your authorized passcode':'أدخل رمز الدخول المعتمد','Authenticate Staff':'توثيق دخول الموظف','Customer Access Login':'تسجيل دخول العميل',
+                'Provide your details to earn loyalty badge tiers and order from Al-Tawfiqia Pharmacy marketplace.':'أدخل بياناتك للطلب من متجر صيدلية التوفيقية والاستفادة من مزايا الولاء.',
+                'Full Name *':'الاسم الكامل *','Delivery Location / Address *':'موقع / عنوان التوصيل *','Phone Number *':'رقم الهاتف *','Access Marketplace':'دخول المتجر',
+                'Ask Pharmacist via Helpline Chat':'محادثة الصيدلي','Send a message to the pharmacy team.':'أرسل رسالة إلى فريق الصيدلية.','Start a conversation':'ابدأ محادثة','Messages are stored only in this open app session.':'تُحفظ الرسائل في جلسة التطبيق المفتوحة فقط.',
+                'Write your message':'اكتب رسالتك','Send':'إرسال','Close':'إغلاق','Analytics':'التحليلات','Backup exported successfully!':'تم تصدير النسخة الاحتياطية بنجاح!',
+                'Bronze Member':'عضو برونزي','Silver Member':'عضو فضي','Gold Member':'عضو ذهبي','Platinum Member':'عضو بلاتيني','0% Tier Discount':'خصم مستوى الولاء 0%','0% OFF':'خصم 0%',
+                'in stock':'متوفر','in stock ':'متوفر ','Search by brand name, active ingredient, or symptom...':'ابحث باسم المنتج أو المادة الفعالة أو العرض...',
+                'No products matching your criteria are available. Pharmacy staff can populate the marketplace using the full-page stock manager or bulk CSV upload tool.':'لا توجد منتجات مطابقة. يمكن لموظفي الصيدلية إضافة المخزون من صفحة إدارة المخزون أو استيراد CSV.',
+                'Enter barcode':'أدخل الباركود','Enter product name':'أدخل اسم المنتج','Enter active ingredient':'أدخل المادة الفعالة','Enter symptoms or tags':'أدخل الأعراض أو الوسوم','Enter category':'أدخل الفئة','Enter price in EGP':'أدخل السعر بالجنيه','Enter stock quantity':'أدخل كمية المخزون','Paste product image URL':'ألصق رابط صورة المنتج','Search by brand name, active ingredient, or symptom...':'ابحث باسم المنتج أو المادة الفعالة أو العرض...','Enter your authorized passcode':'أدخل رمز الدخول المعتمد','Enter phone number':'أدخل رقم الهاتف','Enter delivery address':'أدخل عنوان التوصيل','Price before discount':'السعر قبل الخصم','New discounted price':'السعر الجديد بعد الخصم',
+                'Your Trusted Partner in':'شريككم الموثوق في','Order History':'سجل الطلبات','Pending':'قيد الانتظار','Completed':'مكتمل','Declined':'مرفوض',
+                'Market & Sales Analytics':'تحليلات السوق والمبيعات','Sales Performance':'أداء المبيعات','Total Revenue':'إجمالي الإيرادات','Total Orders':'إجمالي الطلبات',
+                'Total Inventory Units':'إجمالي وحدات المخزون','Low Stock Alerts':'تنبيهات انخفاض المخزون','Recent Transactions':'المعاملات الأخيرة','Date':'التاريخ',
+                'Revenue':'الإيرادات','Orders':'الطلبات','Category':'الفئة','Stock':'المخزون','Expiry':'تاريخ الانتهاء','Barcode Number':'رقم الباركود',
+                'Prescription Attachment:':'مرفق الروشتة:','View Image File':'عرض ملف الصورة','Approve':'موافقة','Decline':'رفض','Total':'الإجمالي',
+                'Database Backup & Restore Manager':'مدير النسخ الاحتياطي والاستعادة','Export all inventory and order history into a secure JSON file, or restore data instantly from a previous backup.':'صدّر المخزون وسجل الطلبات إلى ملف JSON أو استعد البيانات من نسخة احتياطية سابقة.',
+                'Export Backup (.JSON)':'تصدير نسخة احتياطية (JSON)','Import / Restore Backup':'استيراد / استعادة نسخة احتياطية','Import CSV Inventory':'استيراد مخزون CSV',
+                'Inventory Management':'إدارة المخزون','Scan Product Barcode':'مسح باركود المنتج','Cancel / Close Scanner':'إلغاء / إغلاق الماسح',
+                'Customer Portal':'بوابة العملاء','Staff Portal':'بوابة الموظفين','Switch Portal':'تبديل البوابة','Customer Access':'دخول العميل','Staff Authentication':'توثيق الموظفين',
+                'Start Shopping & Order':'ابدأ التسوق والطلب','12-Character Private ID':'المعرّف السري المكوّن من 12 حرفًا','Enter your name and delivery location to begin shopping.':'أدخل اسمك وعنوان التوصيل لبدء التسوق.',
+                'Search stock by name or barcode...':'ابحث في المخزون بالاسم أو الباركود...','Complete Sale & Sync Stock':'إتمام البيع ومزامنة المخزون','Print POS Thermal Receipt':'طباعة إيصال نقطة البيع',
+                'Currently Unavailable':'غير متاح حاليًا','Available':'متاح','Remove Discount':'إزالة الخصم','Save Tier Discounts':'حفظ خصومات المستويات',
+                'Customer Portal:':'بوابة العميل:','Staff:':'الموظف:','Customer:':'العميل:','Rare / Hard to Find':'نادر / يصعب العثور عليه',
+                "Upload Doctor's Prescription":"رفع روشتة الطبيب",'Loyalty Points':'نقاط الولاء','Loyalty Tier':'مستوى الولاء','Your Tier Discount':'خصم مستواك',
+                'Start Shopping & Order':'ابدأ التسوق والطلب','Order completed & permanently saved!':'تم إتمام الطلب وحفظه!','New stock item added to directory!':'تمت إضافة المنتج إلى دليل المخزون!',
+                'Select your access portal below to browse our marketplace, check your loyalty badge level, or login to manage pharmacy inventory and client orders.':'اختر بوابتك لتصفح المتجر أو متابعة مزايا الولاء أو إدارة المخزون وطلبات العملاء.',
+                'Preserving Health & Quality Care Always':'للحفاظ على الصحة وتقديم رعاية عالية الجودة دائمًا','Helpline 24/7':'خط المساعدة على مدار الساعة','Requires Login (Name, Location & Phone). Browse catalog, earn Loyalty Tiers (Bronze to Platinum), and upload doctor prescriptions.':'يتطلب تسجيل الدخول بالاسم والموقع والهاتف. تصفح الكتالوج واستفد من مستويات الولاء وارفع الروشتات الطبية.',
+                'Protected access for Al-Tawfiqia staff. Includes market analytics, barcode scanner, full inventory management, and backup tools.':'دخول محمي لموظفي التوفيقية، يشمل تحليلات السوق وماسح الباركود وإدارة المخزون والنسخ الاحتياطي.',
+                'Market Analysis & Revenue Metrics':'تحليل السوق ومؤشرات الإيرادات','JSON Data Backup & Restore Manager':'مدير نسخ واستعادة بيانات JSON','Camera Barcode Scanner & POS Checkout':'ماسح باركود بالكاميرا ونقطة البيع',
+                'No customer messages yet':'لا توجد رسائل عملاء بعد','Customer messages will appear here after they send one.':'ستظهر رسائل العملاء هنا بعد إرسالها.',
+                'Live POS & Web Sales':'مبيعات نقطة البيع والمتجر','Total Items in Stock':'إجمالي المنتجات في المخزون','unique SKUs':'أصناف فريدة','Completed Orders':'الطلبات المكتملة','Successful transactions':'المعاملات الناجحة','Pending Prescriptions':'روشتات قيد الانتظار','Awaiting staff review':'بانتظار مراجعة الموظفين',
+                'Market Demand Breakdown & Low Stock Warnings':'تحليل الطلب في السوق وتنبيهات انخفاض المخزون','Top Categories in Stock':'أكثر الفئات توفرًا','Low Stock Alerts (< 10 units)':'تنبيهات انخفاض المخزون (أقل من 10 وحدات)','All inventory items are adequately stocked.':'مستويات المخزون لجميع المنتجات كافية.',
+                'Add New Inventory Stock Item':'إضافة منتج جديد للمخزون','Dedicated full-page form with built-in camera barcode scanning and bulk CSV upload capabilities.':'نموذج كامل لإضافة المخزون مع مسح الباركود بالكاميرا واستيراد ملفات CSV دفعة واحدة.',
+                'Bulk CSV Upload':'استيراد CSV جماعي','Date:':'التاريخ:','Time:':'الوقت:','AL-TAWFIQIA PHARMACY':'صيدلية التوفيقية','Thank you for choosing Al-Tawfiqia!':'شكرًا لاختيار صيدلية التوفيقية!',
+                'No past orders registered yet.':'لا توجد طلبات سابقة مسجلة بعد.','My Persistent Order History':'سجل طلباتي الدائم','Total Paid':'إجمالي المدفوع',
+                'Bulk CSV items imported into inventory!':'تم استيراد المنتجات من CSV إلى المخزون!','Order approved!':'تمت الموافقة على الطلب!','Order declined.':'تم رفض الطلب.',
+                "Set your pharmacy's own discount percentage for each membership tier. The selected customer's tier and discount are shown in the customer portal. Tier discounts apply to non-sale items at checkout; sale prices are not discounted twice.":'حدد نسبة الخصم لكل مستوى ولاء في صيدليتك. يظهر مستوى العميل وخصمه في بوابة العملاء. تطبق خصومات الولاء على المنتجات غير المخفضة فقط لتجنب تكرار الخصم.',
+                'Save Stock Item to Directory':'حفظ المنتج في دليل المخزون','Product Image URL (Optional)':'رابط صورة المنتج (اختياري)','Initial Stock Quantity *':'كمية المخزون الأولية *','Batch Expiry Date':'تاريخ انتهاء التشغيلة',
+                'Bronze':'برونزي','Silver':'فضي','Gold':'ذهبي','Platinum':'بلاتيني','Authenticate Staff Passcode':'تسجيل دخول الموظفين','Staff Cloud Login':'دخول الموظفين إلى السحابة','Restore From Backup (.JSON)':'استعادة من نسخة احتياطية (JSON)','+10':'+١٠','+50':'+٥٠','Enter your full name':'أدخل اسمك الكامل','Specify dosage or allergies...':'حدد الجرعة أو الحساسية...','Write a reply':'اكتب ردًا','Ask pharmacist':'اسأل الصيدلي','Close customer login':'إغلاق تسجيل دخول العميل','Close discount window':'إغلاق نافذة الخصم','Close pharmacist chat':'إغلاق محادثة الصيدلي','Close shopping cart':'إغلاق سلة التسوق','Close staff login':'إغلاق تسجيل دخول الموظف',
+                'Firebase Cloud Login':'تسجيل الدخول السحابي عبر Firebase','Staff Cloud Login':'دخول الموظفين إلى السحابة','Sign in with the staff user created in Firebase Authentication. No account is created by this form.':'سجّل الدخول بحساب الموظف الذي أنشأته في مصادقة Firebase. لن يتم إنشاء أي حساب من هذا النموذج.','Staff email':'البريد الإلكتروني للموظف','Staff email address':'البريد الإلكتروني للموظف','Password':'كلمة المرور','Firebase password':'كلمة مرور Firebase','Sign in and sync data':'تسجيل الدخول ومزامنة البيانات','Sign out of cloud':'تسجيل الخروج من السحابة','Firebase: connecting…':'Firebase: جارٍ الاتصال…','Firebase connected — sign in to sync staff data':'تم الاتصال بـ Firebase — سجّل دخول الموظف لمزامنة البيانات','Firebase connected — customer browsing mode':'تم الاتصال بـ Firebase — وضع تصفح العملاء','Firebase not ready. Open the system from Firebase Hosting and check setup.':'Firebase غير جاهز. افتح النظام من استضافة Firebase وتحقق من الإعدادات.','Cloud data synced':'تمت مزامنة البيانات السحابية','Firebase setup needs attention. Check Firestore and Security Rules.':'تحتاج إعدادات Firebase إلى مراجعة. تحقق من Firestore وقواعد الأمان.','Email/password sign-in failed. Check the Firebase Auth user and password.':'فشل تسجيل الدخول بالبريد وكلمة المرور. تحقق من مستخدم Firebase وكلمة المرور.'
+            };
+            const reverseTranslations = Object.fromEntries(Object.entries(interfaceTranslations).map(([en, ar]) => [ar, en]));
+            return {
+                lang: 'en',
+                currentView: 'landing',
+                customerTab: 'shop',
+                workerTab: 'analytics',
+                showAuthModal: false,
+                customerAuthModalOpen: false,
+                discountModalOpen: false,
+                discountForm: { before: '', after: '' },
+                cartDrawerOpen: false,
+                chatOpen: false,
+                newChatMessage: '',
+                workerReplyMessage: '',
+                chatMessages: [],
+                scannerActive: false,
+                html5QrCodeScanner: null,
+                searchQuery: '',
+                selectedCategoryFilter: '',
+                posSearch: '',
+                passcodeInput: '',
+                staffEmailInput: '',
+                staffPasswordInput: '',
+                activeStaff: null,
+                cloudStatus: 'Firebase: connecting…',
+                cloudAuthenticated: false,
+                cloudIssue: false,
+                cloudReady: false,
+                cloudSyncReady: false,
+                cloudUnsubInventory: null,
+                cloudUnsubTiers: null,
+                cloudUnsubOrders: null,
+                cloudSignatures: { inventory: '[]', orders: '[]', loyaltyTiers: '' },
+                cloudRemoteCounts: { inventory: null, orders: null },
+                cloudWriteTimers: {},
+
+                customerAccount: { username: '', location: '', phone: '' },
+
+                customerLoginForm: {
+                    username: '',
+                    location: '',
+                    phone: ''
+                },
+
+                toast: { show: false, message: '', type: 'success' },
+                prescriptionForm: { notes: '', file: null },
+
+                // Start with no preloaded products or customer orders. Staff can enter the pharmacy's own verified data.
+                inventory: [],
+                orders: [],
+                cart: [],
+                loyaltyTiers: {
+                    Bronze: { discount: 0 },
+                    Silver: { discount: 0 },
+                    Gold: { discount: 0 },
+                    Platinum: { discount: 0 }
+                },
+
+                modalForm: { id: null, barcode: '', name: '', activeIngredient: '', symptoms: '', category: '', price: '', stock: '', expiryDate: '', imageUrl: '', isOnSale: false, isRare: false },
+
+                initApp() {
+                    this.loadStoredData();
+                    this.setupAutoSave();
+                    this.toggleLanguage(false);
+                    window.addEventListener('pharmacy-firebase-ready', () => this.initializeCloudConnection());
+                    window.addEventListener('pharmacy-firebase-error', () => {
+                        this.cloudIssue = true;
+                        this.cloudStatus = 'Firebase not ready. Open the system from Firebase Hosting and check setup.';
+                    });
+                    if (window.pharmacyFirebase) this.initializeCloudConnection();
+                    // Keep translated UI labels translated as Alpine updates dynamic sections.
+                    if (window.MutationObserver) {
+                        this.languageObserver = new MutationObserver(() => this.translateInterface());
+                        this.languageObserver.observe(document.body, { childList: true, characterData: true, subtree: true });
+                    }
+                },
+
+                toggleLanguage(shouldToggle = true) {
+                    if (shouldToggle) this.lang = this.lang === 'en' ? 'ar' : 'en';
+                    document.documentElement.lang = this.lang;
+                    document.documentElement.dir = this.lang === 'ar' ? 'rtl' : 'ltr';
+                    document.body.dir = this.lang === 'ar' ? 'rtl' : 'ltr';
+                    document.body.classList.toggle('rtl-mode', this.lang === 'ar');
+                    this.translateInterface();
+                },
+
+                translateInterface() {
+                    const textMap = this.lang === 'ar' ? interfaceTranslations : reverseTranslations;
+                    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+                        acceptNode(node) {
+                            if (!node.parentElement || node.parentElement.closest('script,style,textarea')) return NodeFilter.FILTER_REJECT;
+                            return node.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+                        }
+                    });
+                    const nodes = [];
+                    while (walker.nextNode()) nodes.push(walker.currentNode);
+                    nodes.forEach(node => {
+                        const original = node.nodeValue;
+                        const trimmed = original.trim();
+                        const translated = textMap[trimmed];
+                        if (translated && translated !== trimmed) node.nodeValue = original.replace(trimmed, translated);
+                    });
+                    document.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el => {
+                        ['placeholder','title','aria-label'].forEach(attr => {
+                            const value = el.getAttribute(attr);
+                            if (value && textMap[value]) el.setAttribute(attr, textMap[value]);
+                        });
+                    });
+                },
+
+                loadStoredData() {
+                    // Preserve staff-entered data while removing only the old starter records from the prior build.
+                    const legacyStarterIds = new Set([1, 2, 3, 4, 5]);
+                    let hasLegacyStarterOrder = false;
+
+                    const storedInventory = localStorage.getItem('tawfiqia_inventory');
+                    if (storedInventory) {
+                        try {
+                            const parsedInventory = JSON.parse(storedInventory);
+                            this.inventory = (Array.isArray(parsedInventory) ? parsedInventory : []).filter(item =>
+                                !legacyStarterIds.has(Number(item && item.id))
+                            );
+                        } catch (err) {
+                            this.inventory = [];
+                            this.showToast('Saved inventory could not be read. Please restore a valid backup.', 'error');
+                        }
+                    }
+
+                    const storedOrders = localStorage.getItem('tawfiqia_orders');
+                    if (storedOrders) {
+                        try {
+                            const parsedOrders = JSON.parse(storedOrders);
+                            const orders = Array.isArray(parsedOrders) ? parsedOrders : [];
+                            hasLegacyStarterOrder = orders.some(order => String(order && order.id) === '928104');
+                            this.orders = orders.filter(order => String(order && order.id) !== '928104');
+                        } catch (err) {
+                            this.orders = [];
+                        }
+                    }
+
+                    const storedTiers = localStorage.getItem('tawfiqia_loyalty_tiers');
+                    if (storedTiers) {
+                        try {
+                            const savedTiers = JSON.parse(storedTiers);
+                            ['Bronze','Silver','Gold','Platinum'].forEach(tier => {
+                                if (savedTiers && savedTiers[tier] && Number.isFinite(Number(savedTiers[tier].discount))) {
+                                    this.loyaltyTiers[tier].discount = Math.min(100, Math.max(0, Number(savedTiers[tier].discount)));
+                                }
+                            });
+                        } catch (err) { /* keep default percentages at zero */ }
+                    }
+                    const storedCustomer = localStorage.getItem('tawfiqia_customer');
+                    if (hasLegacyStarterOrder) {
+                        // The prior build paired its starter order with a prefilled demo profile.
+                        localStorage.removeItem('tawfiqia_customer');
+                        this.customerAccount = { username: '', location: '', phone: '' };
+                    } else if (storedCustomer) {
+                        try {
+                            const parsedCustomer = JSON.parse(storedCustomer);
+                            if (parsedCustomer && typeof parsedCustomer === 'object') {
+                                this.customerAccount = {
+                                    username: parsedCustomer.username || '',
+                                    location: parsedCustomer.location || '',
+                                    phone: parsedCustomer.phone || ''
+                                };
+                            }
+                        } catch (err) {
+                            this.customerAccount = { username: '', location: '', phone: '' };
+                        }
+                    }
+                },
+                setupAutoSave() {
+                    this.$watch('inventory', (val) => {
+                        localStorage.setItem('tawfiqia_inventory', JSON.stringify(val));
+                        if (this.cloudAuthenticated && this.cloudSyncReady) this.queueCloudCollectionSync('inventory', val);
+                    });
+                    this.$watch('orders', (val) => {
+                        localStorage.setItem('tawfiqia_orders', JSON.stringify(val));
+                        if (this.cloudAuthenticated && this.cloudSyncReady) this.queueCloudCollectionSync('orders', val);
+                    });
+                    this.$watch('customerAccount', (val) => localStorage.setItem('tawfiqia_customer', JSON.stringify(val)));
+                    this.$watch('loyaltyTiers', (val) => {
+                        localStorage.setItem('tawfiqia_loyalty_tiers', JSON.stringify(val));
+                        if (this.cloudAuthenticated && this.cloudSyncReady) this.queueCloudSettingsSync(val);
+                    });
+                },
+
+                async initializeCloudConnection() {
+                    if (this._cloudInitStarted || !window.pharmacyFirebase) return;
+                    this._cloudInitStarted = true;
+                    this.cloudStatus = 'Firebase: connecting…';
+                    try {
+                        const cloud = window.pharmacyFirebase;
+                        await cloud.ready;
+                        this.cloudReady = true;
+                        this.cloudStatus = 'Firebase connected — sign in to sync staff data';
+                        this.cloudIssue = false;
+                        this.cloudUnsubInventory = cloud.watchCollection('inventory', (items) => {
+                            this.cloudRemoteCounts.inventory = items.length;
+                            this.cloudSignatures.inventory = JSON.stringify(items);
+                            // An empty cloud collection must not erase existing local stock before migration.
+                            if (items.length > 0) this.inventory = this.mergeRecordsById(items, this.inventory);
+                            else if (this.inventory.length === 0) this.inventory = items;
+                            this.cloudIssue = false;
+                        }, (err) => this.reportCloudError(err));
+                        this.cloudUnsubTiers = cloud.watchSettings((tiers) => {
+                            if (tiers && typeof tiers === 'object') {
+                                ['Bronze','Silver','Gold','Platinum'].forEach(name => {
+                                    if (tiers[name] && Number.isFinite(Number(tiers[name].discount))) {
+                                        this.loyaltyTiers[name].discount = Math.max(0, Math.min(100, Number(tiers[name].discount)));
+                                    }
+                                });
+                                this.cloudSignatures.loyaltyTiers = JSON.stringify(this.loyaltyTiers);
+                            }
+                            this.cloudIssue = false;
+                        }, (err) => this.reportCloudError(err));
+                        cloud.onAuthChanged((user) => {
+                            this.cloudAuthenticated = Boolean(user);
+                            if (user) {
+                                this.cloudStatus = 'Firebase connected — staff signed in';
+                                if (this.cloudUnsubOrders) this.cloudUnsubOrders();
+                                this.cloudUnsubOrders = cloud.watchCollection('orders', (items) => {
+                                    this.cloudRemoteCounts.orders = items.length;
+                                    this.cloudSignatures.orders = JSON.stringify(items);
+                                    // Customer browsers do not read other customers' orders; only staff gets this subscription.
+                                    if (items.length > 0) this.orders = this.mergeRecordsById(items, this.orders);
+                                    else if (this.orders.length === 0) this.orders = items;
+                                    this.cloudIssue = false;
+                                }, (err) => this.reportCloudError(err));
+                            } else {
+                                if (this.cloudUnsubOrders) this.cloudUnsubOrders();
+                                this.cloudUnsubOrders = null;
+                                this.cloudStatus = this.cloudIssue ? 'Firebase setup needs attention. Check Firestore and Security Rules.' : 'Firebase connected — customer browsing mode';
+                            }
+                        });
+                    } catch (err) {
+                        this.reportCloudError(err);
+                    }
+                },
+
+                reportCloudError(err) {
+                    this.cloudIssue = true;
+                    const code = err && err.code ? err.code : '';
+                    this.cloudStatus = (code === 'permission-denied' || code === 'firestore/permission-denied')
+                        ? 'Firebase setup needs attention. Check Firestore and Security Rules.'
+                        : 'Firebase setup needs attention. Check Firestore is created and reachable.';
+                    console.error('Firebase connection error:', err);
+                },
+
+                async authenticateStaff() {
+                    const cloud = window.pharmacyFirebase;
+                    if (!cloud) {
+                        this.showToast('Firebase is still loading. Open this system from Firebase Hosting and try again.', 'error');
+                        return;
+                    }
+                    try {
+                        await cloud.ready;
+                        await cloud.signIn(this.staffEmailInput.trim(), this.staffPasswordInput);
+                    } catch (err) {
+                        console.error('Staff Firebase sign-in failed:', err);
+                        this.showToast('Email/password sign-in failed. Check the Firebase Auth user and password.', 'error');
+                        return;
+                    }
+                    this.activeStaff = { name: this.staffEmailInput.trim() };
+                    this.showAuthModal = false;
+                    this.currentView = 'worker';
+                    this.staffPasswordInput = '';
+                    try {
+                        await this.hydrateCloudData();
+                        this.showToast('Staff signed in. Cloud sync is active.');
+                    } catch (err) {
+                        console.error('Staff signed in, but Firestore setup/sync failed:', err);
+                        this.reportCloudError(err);
+                        this.showToast('Staff signed in, but Firestore setup or security rules need attention.', 'error');
+                    }
+                },
+
+                mergeRecordsById(remote, local) {
+                    const merged = new Map();
+                    (Array.isArray(local) ? local : []).forEach(item => merged.set(String(item.id), item));
+                    (Array.isArray(remote) ? remote : []).forEach(item => merged.set(String(item.id), item));
+                    return Array.from(merged.values());
+                },
+
+                async hydrateCloudData() {
+                    const cloud = window.pharmacyFirebase;
+                    if (!cloud || !cloud.currentUser()) throw new Error('Staff sign-in required');
+                    this.cloudSyncReady = false;
+                    const [remoteInventory, remoteOrders, remoteTiers] = await Promise.all([
+                        cloud.readCollection('inventory'),
+                        cloud.readCollection('orders'),
+                        cloud.readSettings()
+                    ]);
+                    // Merge by ID on first connection so local records aren't silently discarded. Remote wins on ID conflicts.
+                    this.inventory = this.mergeRecordsById(remoteInventory, this.inventory);
+                    this.orders = this.mergeRecordsById(remoteOrders, this.orders);
+                    if (remoteTiers && typeof remoteTiers === 'object') {
+                        ['Bronze','Silver','Gold','Platinum'].forEach(name => {
+                            if (remoteTiers[name] && Number.isFinite(Number(remoteTiers[name].discount))) {
+                                this.loyaltyTiers[name].discount = Math.max(0, Math.min(100, Number(remoteTiers[name].discount)));
+                            }
+                        });
+                    }
+                    await Promise.all([
+                        cloud.syncCollection('inventory', this.inventory),
+                        cloud.syncCollection('orders', this.orders),
+                        cloud.saveSettings(this.loyaltyTiers)
+                    ]);
+                    this.cloudSignatures.inventory = JSON.stringify(this.inventory);
+                    this.cloudSignatures.orders = JSON.stringify(this.orders);
+                    this.cloudSignatures.loyaltyTiers = JSON.stringify(this.loyaltyTiers);
+                    this.cloudSyncReady = true;
+                    this.cloudStatus = 'Cloud data synced';
+                    this.cloudIssue = false;
+                },
+
+                queueCloudCollectionSync(name, values) {
+                    const signature = JSON.stringify(values);
+                    if (signature === this.cloudSignatures[name]) return;
+                    clearTimeout(this.cloudWriteTimers[name]);
+                    const copy = JSON.parse(signature);
+                    this.cloudWriteTimers[name] = setTimeout(async () => {
+                        try {
+                            await window.pharmacyFirebase.syncCollection(name, copy);
+                            this.cloudSignatures[name] = signature;
+                            this.cloudStatus = 'Cloud data synced';
+                            this.cloudIssue = false;
+                        } catch (err) { this.reportCloudError(err); }
+                    }, 500);
+                },
+
+                queueCloudSettingsSync(values) {
+                    const signature = JSON.stringify(values);
+                    if (signature === this.cloudSignatures.loyaltyTiers) return;
+                    clearTimeout(this.cloudWriteTimers.loyaltyTiers);
+                    const copy = JSON.parse(signature);
+                    this.cloudWriteTimers.loyaltyTiers = setTimeout(async () => {
+                        try {
+                            await window.pharmacyFirebase.saveSettings(copy);
+                            this.cloudSignatures.loyaltyTiers = signature;
+                            this.cloudStatus = 'Cloud data synced';
+                            this.cloudIssue = false;
+                        } catch (err) { this.reportCloudError(err); }
+                    }, 500);
+                },
+
+                async signOutStaff() {
+                    try { if (window.pharmacyFirebase) await window.pharmacyFirebase.signOut(); }
+                    catch (err) { this.reportCloudError(err); }
+                    this.activeStaff = null;
+                    this.currentView = 'landing';
+                    this.cloudSyncReady = false;
+                    this.showToast('Signed out of the pharmacy cloud session.');
+                },
+
+                closeActiveOverlay() {
+                    if (this.chatOpen) { this.chatOpen = false; return; }
+                    if (this.cartDrawerOpen) { this.cartDrawerOpen = false; return; }
+                    if (this.customerAuthModalOpen) { this.customerAuthModalOpen = false; return; }
+                    if (this.showAuthModal) { this.showAuthModal = false; return; }
+                    if (this.scannerActive) { this.toggleCameraScanner(); }
+                },
+
+                openCustomerLoginModal() {
+                    this.customerLoginForm = {
+                        username: this.customerAccount.username || '',
+                        location: this.customerAccount.location || '',
+                        phone: this.customerAccount.phone || ''
+                    };
+                    this.customerAuthModalOpen = true;
+                },
+
+                submitCustomerLogin() {
+                    const username = (this.customerLoginForm.username || '').trim();
+                    const location = (this.customerLoginForm.location || '').trim();
+                    const phone = (this.customerLoginForm.phone || '').trim();
+                    if (!username || !location || !phone) {
+                        this.showToast('Please complete all customer login fields.', 'error');
+                        return;
+                    }
+                    this.customerAccount = { username, location, phone };
+                    this.customerAuthModalOpen = false;
+                    this.currentView = 'customer';
+                    this.showToast(`Welcome to Al-Tawfiqia, ${this.customerAccount.username}!`);
+                },
+
+                sendChatMessage() {
+                    const text = (this.newChatMessage || '').trim();
+                    if (!text) return;
+                    this.chatMessages.push({
+                        id: Date.now() + Math.random(),
+                        sender: this.customerAccount.username || 'Customer',
+                        text,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    this.newChatMessage = '';
+                },
+
+                sendWorkerReply() {
+                    const text = (this.workerReplyMessage || '').trim();
+                    if (!text) return;
+                    this.chatMessages.push({
+                        id: Date.now() + Math.random(),
+                        sender: this.activeStaff ? this.activeStaff.name : 'Pharmacy Staff',
+                        text,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    this.workerReplyMessage = '';
+                },
+
+                toggleCameraScanner() {
+                    if (this.scannerActive) {
+                        if (this.html5QrCodeScanner) {
+                            this.html5QrCodeScanner.stop().then(() => {
+                                this.scannerActive = false;
+                            }).catch(err => console.error(err));
+                        }
+                    } else {
+                        this.scannerActive = true;
+                        this.$nextTick(() => {
+                            this.html5QrCodeScanner = new Html5Qrcode("barcode-reader");
+                            this.html5QrCodeScanner.start(
+                                { facingMode: "environment" },
+                                { fps: 10, qrbox: { width: 250, height: 150 } },
+                                (decodedText) => {
+                                    this.modalForm.barcode = decodedText;
+                                    this.showToast(`Scanned Barcode: ${decodedText}`);
+                                    this.html5QrCodeScanner.stop();
+                                    this.scannerActive = false;
+                                },
+                                (errorMessage) => { /* scanning errors */ }
+                            ).catch(err => {
+                                this.showToast('Camera access blocked or not available', 'error');
+                                this.scannerActive = false;
+                            });
+                        });
+                    }
+                },
+
+                addToCart(item) {
+                    const inCart = this.cart.find(c => c.id === item.id);
+                    if (inCart) {
+                        if (inCart.qty < item.stock) {
+                            inCart.qty++;
+                        } else {
+                            this.showToast('Exceeds available stock count!', 'error');
+                        }
+                    } else {
+                        this.cart.push({ ...item, qty: 1 });
+                    }
+                },
+
+                removeFromCart(id) {
+                    this.cart = this.cart.filter(i => i.id !== id);
+                },
+
+                get cartSubtotalBeforeTierDiscount() {
+                    return this.cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
+                },
+
+                get cartLoyaltyDiscount() {
+                    if (this.currentView !== 'customer' || !String(this.customerAccount.username || '').trim()) return 0;
+                    const eligible = this.cart.reduce((sum, item) => sum + (!item.isOnSale ? Number(item.price) * item.qty : 0), 0);
+                    return eligible * (Number(this.customerLoyaltyTier.discount) || 0) / 100;
+                },
+
+                get cartSubtotal() {
+                    return Math.max(0, this.cartSubtotalBeforeTierDiscount - this.cartLoyaltyDiscount);
+                },
+
+                get cartTotalItems() {
+                    return this.cart.reduce((sum, item) => sum + item.qty, 0);
+                },
+
+                checkoutOrder() {
+                    if (this.cart.length === 0) return;
+                    const isCustomerOrder = this.currentView === 'customer';
+                    if (!isCustomerOrder) {
+                        this.cart.forEach(cartItem => {
+                            const invItem = this.inventory.find(i => String(i.id) === String(cartItem.id));
+                            if (invItem) invItem.stock = Math.max(0, Number(invItem.stock) - Number(cartItem.qty));
+                        });
+                    }
+                    const newOrder = {
+                        id: String(Date.now()) + Math.random().toString(36).slice(2, 7),
+                        customerName: this.customerAccount.username || 'Guest Customer',
+                        items: JSON.parse(JSON.stringify(this.cart)),
+                        total: this.cartSubtotal,
+                        status: isCustomerOrder ? 'Pending' : 'Completed',
+                        timestamp: new Date().toLocaleString()
+                    };
+                    this.orders.unshift(newOrder);
+                    if (isCustomerOrder && window.pharmacyFirebase) {
+                        window.pharmacyFirebase.createCustomerOrder(newOrder).catch(err => {
+                            console.error('Could not submit order to Firebase:', err);
+                            this.showToast('Order is saved on this device, but cloud submission failed. Check Firebase setup.', 'error');
+                        });
+                    }
+                    this.cart = [];
+                    this.showToast(isCustomerOrder ? 'Order submitted for pharmacy review.' : 'Sale completed and stock updated.');
+                },
+
+                handlePrescriptionFile(e) {
+                    const file = e.target.files[0];
+                    if (file) this.prescriptionForm.file = file.name;
+                },
+
+                submitPrescription() {
+                    const newOrder = {
+                        id: Date.now().toString().slice(-6),
+                        customerName: this.customerAccount.username,
+                        phone: this.customerAccount.phone,
+                        notes: this.prescriptionForm.notes,
+                        prescriptionImage: this.prescriptionForm.file || 'prescription.png',
+                        items: [],
+                        total: 0,
+                        status: 'Pending',
+                        timestamp: new Date().toLocaleString()
+                    };
+                    this.orders.unshift(newOrder);
+                    if (window.pharmacyFirebase) {
+                        window.pharmacyFirebase.createCustomerOrder(newOrder).catch(err => {
+                            console.error('Could not submit prescription request to Firebase:', err);
+                            this.showToast('Request is saved on this device, but cloud submission failed.', 'error');
+                        });
+                    }
+                    this.showToast('Prescription submitted successfully!');
+                    this.customerTab = 'history';
+                },
+
+                printReceipt() {
+                    window.print();
+                },
+
+                importCSVInventory(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const text = e.target.result;
+                        const lines = text.split('\n').slice(1);
+                        lines.forEach((line, idx) => {
+                            const [barcode, name, category, price, stock] = line.split(',');
+                            if (name && price) {
+                                this.inventory.push({
+                                    id: Date.now() + idx,
+                                    barcode: barcode ? barcode.trim() : 'CSV' + idx,
+                                    name: name.trim(),
+                                    category: category ? category.trim() : 'General',
+                                    price: parseFloat(price) || 0,
+                                    stock: parseInt(stock) || 0
+                                });
+                            }
+                        });
+                        this.showToast('Bulk CSV items imported into inventory!');
+                    };
+                    reader.readAsText(file);
+                },
+
+                exportDataBackup() {
+                    const backupData = {
+                        inventory: this.inventory,
+                        orders: this.orders,
+                        customerAccount: this.customerAccount,
+                        exportDate: new Date().toISOString()
+                    };
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", `AlTawfiqia_Pharmacy_Backup_${Date.now()}.json`);
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                    this.showToast('Backup exported successfully!');
+                },
+
+                importDataBackup(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.result);
+                            if (parsed.inventory) this.inventory = parsed.inventory;
+                            if (parsed.orders) this.orders = parsed.orders;
+                            if (parsed.customerAccount) this.customerAccount = parsed.customerAccount;
+                            this.showToast('Database restored successfully from backup!');
+                        } catch (err) {
+                            this.showToast('Invalid JSON backup file format.', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                },
+
+                bumpStock(id, amount) {
+                    const item = this.inventory.find(i => i.id === id);
+                    if (item) {
+                        item.stock += amount;
+                        this.showToast(`Updated stock count for ${item.name}`);
+                    }
+                },
+
+                openDiscountModal() {
+                    const current = Number(this.modalForm.price) || 0;
+                    if (!this.modalForm.isOnSale && this.discountForm.before === '') this.discountForm.before = current > 0 ? current : '';
+                    else if (this.modalForm.isOnSale && this.discountForm.before === '') this.discountForm.before = Number(this.modalForm.originalPrice || current) || '';
+                    this.discountModalOpen = true;
+                },
+
+                applyDiscount() {
+                    const before = Number(this.discountForm.before);
+                    const after = Number(this.discountForm.after);
+                    if (!Number.isFinite(before) || before <= 0 || !Number.isFinite(after) || after < 0 || after >= before) {
+                        this.showToast('Enter a valid original price and a lower discounted price.', 'error');
+                        return;
+                    }
+                    this.modalForm.isOnSale = true;
+                    this.modalForm.price = before;
+                    this.discountForm.before = before;
+                    this.discountForm.after = after;
+                    this.discountModalOpen = false;
+                    this.showToast('Discount applied. Customers will see both prices.');
+                },
+
+                clearDiscount() {
+                    this.modalForm.isOnSale = false;
+                    this.discountForm = { before: '', after: '' };
+                    this.discountModalOpen = false;
+                    this.showToast('Product discount removed.');
+                },
+
+                async saveLoyaltyTiers() {
+                    for (const tier of ['Bronze','Silver','Gold','Platinum']) {
+                        const rate = Number(this.loyaltyTiers[tier].discount);
+                        if (!Number.isFinite(rate) || rate < 0 || rate > 100) {
+                            this.showToast('Each tier discount must be between 0 and 100%.', 'error');
+                            return;
+                        }
+                        this.loyaltyTiers[tier].discount = rate;
+                    }
+                    localStorage.setItem('tawfiqia_loyalty_tiers', JSON.stringify(this.loyaltyTiers));
+                    if (this.cloudAuthenticated && this.cloudSyncReady) this.queueCloudSettingsSync(this.loyaltyTiers);
+                    this.showToast('Loyalty tier discounts saved.');
+                },
+
+                saveInventoryItem() {
+                    if (this.modalForm.isOnSale) {
+                        const before = Number(this.discountForm.before);
+                        const after = Number(this.discountForm.after);
+                        if (!Number.isFinite(before) || before <= 0 || !Number.isFinite(after) || after < 0 || after >= before) {
+                            this.showToast('Complete the discount popup with a valid lower price before saving.', 'error');
+                            this.discountModalOpen = true;
+                            return;
+                        }
+                    }
+                    const regularPrice = Number(this.modalForm.price);
+                    const isOnSale = Boolean(this.modalForm.isOnSale);
+                    const newItem = {
+                        id: Date.now(),
+                        barcode: this.modalForm.barcode,
+                        name: this.modalForm.name,
+                        activeIngredient: this.modalForm.activeIngredient,
+                        symptoms: this.modalForm.symptoms,
+                        category: this.modalForm.category,
+                        price: isOnSale ? Number(this.discountForm.after) : regularPrice,
+                        originalPrice: isOnSale ? Number(this.discountForm.before) : null,
+                        isOnSale,
+                        salePrice: isOnSale ? Number(this.discountForm.after) : null,
+                        isRare: Boolean(this.modalForm.isRare),
+                        stock: parseInt(this.modalForm.stock),
+                        expiryDate: this.modalForm.expiryDate,
+                        imageUrl: (this.modalForm.imageUrl || '').trim()
+                    };
+                    this.inventory.unshift(newItem);
+                    this.resetForm();
+                    this.showToast('New stock item added to directory!');
+                    this.workerTab = 'inventory';
+                },
+
+                resetForm() {
+                    this.modalForm = { id: null, barcode: '', name: '', activeIngredient: '', symptoms: '', category: '', price: '', stock: '', expiryDate: '', imageUrl: '', isOnSale: false, isRare: false };
+                    this.discountForm = { before: '', after: '' };
+                    this.discountModalOpen = false;
+                },
+
+                showToast(msg, type = 'success') {
+                    this.toast.message = msg;
+                    this.toast.type = type;
+                    this.toast.show = true;
+                    setTimeout(() => { this.toast.show = false; }, 3500);
+                },
+
+                get availableCategories() {
+                    const set = new Set(this.inventory.map(i => i.category).filter(Boolean));
+                    return Array.from(set);
+                },
+
+                get filteredProducts() {
+                    return this.inventory.filter(i => {
+                        const name = String(i.name || '');
+                        const category = String(i.category || '');
+                        const ingredient = String(i.activeIngredient || '');
+                        const symptoms = String(i.symptoms || '');
+                        const query = this.searchQuery.toLowerCase();
+                        const matchesQuery = !query.trim() ||
+                            name.toLowerCase().includes(query) ||
+                            category.toLowerCase().includes(query) ||
+                            ingredient.toLowerCase().includes(query) ||
+                            symptoms.toLowerCase().includes(query);
+                        
+                        const matchesCategory = !this.selectedCategoryFilter || i.category === this.selectedCategoryFilter;
+
+                        return matchesQuery && matchesCategory;
+                    });
+                },
+
+                get filteredPosInventory() {
+                    if (!this.posSearch.trim()) return this.inventory;
+                    const q = this.posSearch.toLowerCase();
+                    return this.inventory.filter(i => String(i.name || '').toLowerCase().includes(q) || String(i.barcode || '').toLowerCase().includes(q));
+                },
+
+                get customerOrderHistory() {
+                    return this.orders.filter(o => o.customerName === this.customerAccount.username);
+                },
+
+                get customerPoints() {
+                    return this.customerOrderHistory.reduce((sum, ord) => sum + Math.floor(ord.total / 10), 0);
+                },
+
+                get customerLoyaltyTier() {
+                    const pts = this.customerPoints;
+                    let name = 'Bronze';
+                    let icon = 'fa-shield-heart text-amber-600';
+                    if (pts >= 250) { name = 'Platinum'; icon = 'fa-crown text-indigo-600'; }
+                    else if (pts >= 120) { name = 'Gold'; icon = 'fa-award text-yellow-600'; }
+                    else if (pts >= 50) { name = 'Silver'; icon = 'fa-medal text-slate-600'; }
+                    return { name, icon, discount: Number((this.loyaltyTiers[name] || {}).discount) || 0 };
+                },
+
+                get totalAnalyticsRevenue() {
+                    return this.orders.filter(o => o.status === 'Completed').reduce((sum, o) => sum + o.total, 0);
+                },
+
+                get totalInventoryUnits() {
+                    return this.inventory.reduce((sum, i) => sum + i.stock, 0);
+                }
+            };
+        }
+    </script>
+
+    <!-- Firebase Web SDK. Use the Firebase Hosting URL for module/auth support. -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, collection, doc, getDocs, getDoc, onSnapshot, setDoc, addDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFhHZoW9tSx9uc6PZz9yxozITrIhDFlmc",
+            authDomain: "al-tawfiqia-pharmacy.firebaseapp.com",
+            projectId: "al-tawfiqia-pharmacy",
+            storageBucket: "al-tawfiqia-pharmacy.firebasestorage.app",
+            messagingSenderId: "588276169637",
+            appId: "1:588276169637:web:d38a2a08553d2ac261864c",
+            measurementId: "G-ZH1SQG5TVC"
+        };
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const auth = getAuth(firebaseApp);
+        const db = getFirestore(firebaseApp);
+        const safeDocId = (id) => String(id ?? '').replaceAll('/', '%2F').trim() || ('record-' + Date.now());
+        const collectionItems = (snap) => snap.docs.map(d => ({ ...d.data(), id: d.data().id ?? d.id }));
+
+        window.pharmacyFirebase = {
+            ready: Promise.resolve(true),
+            currentUser: () => auth.currentUser,
+            signIn: (email, password) => signInWithEmailAndPassword(auth, email, password),
+            signOut: () => signOut(auth),
+            onAuthChanged: (callback) => onAuthStateChanged(auth, callback),
+            watchCollection: (name, onData, onError) => onSnapshot(collection(db, name), snap => onData(collectionItems(snap)), onError),
+            watchSettings: (onData, onError) => onSnapshot(doc(db, 'settings', 'loyaltyTiers'), snap => onData(snap.exists() ? snap.data() : null), onError),
+            async readCollection(name) {
+                const snap = await getDocs(collection(db, name));
+                return collectionItems(snap);
+            },
+            async readSettings() {
+                const snap = await getDoc(doc(db, 'settings', 'loyaltyTiers'));
+                return snap.exists() ? snap.data() : null;
+            },
+            async syncCollection(name, values) {
+                if (!auth.currentUser) throw new Error('Staff sign-in is required to sync this collection.');
+                const items = Array.isArray(values) ? values : [];
+                const incoming = new Map(items.map(item => [safeDocId(item.id), item]));
+                const current = await getDocs(collection(db, name));
+                const ops = [];
+                current.docs.forEach(d => { if (!incoming.has(d.id)) ops.push({ type: 'delete', ref: d.ref }); });
+                incoming.forEach((item, id) => ops.push({ type: 'set', ref: doc(db, name, id), value: item }));
+                for (let offset = 0; offset < ops.length; offset += 450) {
+                    const batch = writeBatch(db);
+                    ops.slice(offset, offset + 450).forEach(op => op.type === 'delete' ? batch.delete(op.ref) : batch.set(op.ref, op.value));
+                    await batch.commit();
+                }
+            },
+            async saveSettings(tiers) {
+                if (!auth.currentUser) throw new Error('Staff sign-in is required to save settings.');
+                await setDoc(doc(db, 'settings', 'loyaltyTiers'), tiers);
+            },
+            async createCustomerOrder(order) {
+                // Anonymous customers can create a pending request only; staff-only rules protect reads/changes.
+                await addDoc(collection(db, 'orders'), order);
+            }
+        };
+        window.dispatchEvent(new Event('pharmacy-firebase-ready'));
+    </script>
+
+</body>
+</html>
