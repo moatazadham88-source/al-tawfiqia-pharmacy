@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth" :dir="lang === 'ar' ? 'rtl' : 'ltr'">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Tawfiqia Pharmacy | صيدلية التوفيقية</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Cairo', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Alpine.js CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- HTML5 QRCode Reader Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts: Inter & Cairo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        [x-cloak] { display: none !important; }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+        }
+        #barcode-reader video {
+            width: 100% !important;
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-500 selection:text-white" x-data="pharmacyApp()" x-cloak>
+
+    <!-- TOP ANNOUNCEMENT BAR WITH HEALTH QUOTE -->
+    <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-teal-100 text-xs py-2 px-4 text-center font-medium tracking-wide shadow-inner flex justify-between items-center">
+        <span class="hidden sm:inline"><i class="fas fa-heart-pulse text-teal-400 mr-2"></i> <span x-text="dailyQuote"></span></span>
+        <span class="mx-auto sm:mx-0 font-bold tracking-wider uppercase"><i class="fas fa-kit-medical mr-1 text-teal-300"></i> <span x-text="t('brandName')">Al-Tawfiqia Pharmacy</span> • <span x-text="t('tagline')">Premier Healthcare & Cosmetics</span></span>
+        <span class="hidden md:inline"><i class="fas fa-phone mr-1 text-teal-400"></i> <span x-text="t('emergency')">Emergency Helpline 24/7</span></span>
+    </div>
+
+    <!-- MAIN NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 glass-nav border-b border-slate-200/80 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- BRAND LOGO -->
+            <div class="flex items-center space-x-3 cursor-pointer" @click="currentView = 'landing'">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center shadow-lg shadow-brand-600/30 text-white text-2xl font-black font-heading transform hover:rotate-6 transition duration-300">
+                    <i class="fas fa-staff-snake"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black font-heading text-slate-900 tracking-tight leading-none">
+                        Al-Tawfiqia <span class="text-brand-600 font-bold text-lg sm:text-xl">Pharmacy</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-500 font-semibold tracking-wider uppercase mt-0.5">صيدلية التوفيقية</p>
+                </div>
+            </div>
+
+            <!-- NAVIGATION CTA & USER BAR & LANGUAGE TOGGLE -->
+            <div class="flex items-center space-x-3">
+                <button @click="lang = (lang === 'en' ? 'ar' : 'en')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-xs font-bold text-slate-800 transition flex items-center space-x-1">
+                    <i class="fas fa-globe text-brand-600"></i>
+                    <span x-text="lang === 'en' ? 'عربي' : 'English'"></span>
+                </button>
+
+                <template x-if="currentView !== 'landing'">
+                    <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 mr-2">
+                        <span class="w-2 h-2 rounded-full bg-brand-500 mr-1.5 animate-pulse"></span>
+                        <span x-text="currentView === 'customer' ? t('customerPortal') + ' (' + customerAccount.username + ')' : t('staffPortal') + ' (' + currentWorkerName + ')'"></span>
+                    </span>
+                </template>
+
+                <template x-if="currentView === 'customer'">
+                    <div class="hidden md:flex items-center space-x-1 px-3 py-1 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs font-bold">
+                        <span x-text="customerTier.icon"></span>
+                        <span x-text="customerTier.name"></span>
+                        <span class="text-[10px] text-amber-600 font-mono">
+                            (<span x-text="customerAccount.completedOrders"></span> orders - <span x-text="customerTier.discount + '% OFF'"></span>)
+                        </span>
+                    </div>
+                </template>
+
+                <button @click="currentView = 'landing'" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 rounded-xl transition duration-200 border border-slate-200">
+                    <i class="fas fa-right-left mr-1.5"></i> <span x-text="t('switchPortal')">Switch Portal</span>
+                </button>
+
+                <template x-if="currentView === 'customer'">
+                    <button @click="cartDrawerOpen = true" class="relative px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-bold rounded-xl shadow-lg shadow-brand-600/20 transition duration-200 flex items-center space-x-2 text-sm">
+                        <i class="fas fa-basket-shopping text-base"></i>
+                        <span class="hidden sm:inline" x-text="t('cart')">Cart</span>
+                        <span class="bg-white text-brand-800 text-xs px-2 py-0.5 rounded-full font-black shadow-sm" x-text="cartTotalItems">0</span>
+                    </button>
+                </template>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- 1. LANDING VIEW -->
+        <section x-show="currentView === 'landing'" class="py-12">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="px-4 py-1.5 rounded-full bg-brand-100 text-brand-800 text-xs font-bold uppercase tracking-widest inline-block mb-4 border border-brand-200 shadow-sm">
+                    Welcome to Al-Tawfiqia • صيدلية التوفيقية
+                </span>
+                <h2 class="text-4xl sm:text-5xl font-black font-heading text-slate-900 tracking-tight leading-tight mb-6">
+                    <span x-text="t('landingTitle')">Your Trusted Partner in</span> <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-teal-800" x-text="t('landingSubtitle')">Health, Care & Wellness</span>
+                </h2>
+                <p class="text-slate-600 text-base sm:text-lg leading-relaxed" x-text="t('landingDesc')">
+                    Select your access portal below to browse our certified medicine & cosmetics catalog, or manage pharmacy stock and patient requests.
+                </p>
+            </div>
+
+            <!-- DUAL PORTAL CARDS -->
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- CUSTOMER PORTAL CARD -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl hover:shadow-2xl hover:border-brand-300 transition duration-300 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-50 rounded-full group-hover:scale-150 transition duration-500 z-0"></div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-3xl mb-6 shadow-inner group-hover:scale-110 transition duration-300">
+                            <i class="fas fa-user-injured"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-heading text-slate-900 mb-2" x-text="t('customerPortal')">Customer Portal</h3>
+                        <p class="text-slate-500 text-sm mb-6 leading-relaxed" x-text="t('customerPortalDesc')">
+                            Enter with your Username, Phone Number & Location to shop medicine, cosmetics, and send prescriptions directly to staff.
+                        </p>
+                        <ul class="text-xs text-slate-600 space-y-2.5 mb-8">
+                            <li class="flex items-center"><i class="fas fa-check-circle text-brand-500 mr-2"></i> Automatic Order Streak Badges & Tier Discounts</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-brand-500 mr-2"></i> Digital Prescription Upload Tool</li>
+                            <li class="flex items-center"><i class="fas fa-check-circle text-brand-500 mr-2"></i> Transparent Completed & Declined Order History</li>
+                        </ul>
+                    </div>
+                    <button @click="customerAuthModalOpen = true" class="relative z-10 w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl shadow-lg shadow-brand-600/30 transition duration-200 flex items-center justify-center space-x-2 text-sm">
+                        <span x-text="t('enterCustomer')">Enter Customer Portal</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- WORKER PORTAL CARD -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl hover:shadow-2xl hover:border-teal-300 transition duration-300 flex flex-col justify-between group relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-slate-100 rounded-full group-hover:scale-150 transition duration-500 z-0"></div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center text-3xl mb-6 shadow-inner group-hover:scale-110 transition duration-300">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold font-heading text-slate-900 mb-2" x-text="t('staffPortal')">Staff & Worker Portal</h3>
+                        <p class="text-slate-500 text-sm mb-6 leading-relaxed" x-text="t('staffPortalDesc')">
+                            Protected access for Al-Tawfiqia staff. Authenticate using your official 12-character private ID to manage stock, sales analytics, and prescriptions.
+                        </p>
+                        <ul class="text-xs text-slate-600 space-y-2.5 mb-8">
+                            <li class="flex items-center"><i class="fas fa-shield-halved text-teal-600 mr-2"></i> Loyalty Tier Discount Configuration</li>
+                            <li class="flex items-center"><i class="fas fa-clock-rotate-left text-teal-600 mr-2"></i> Fulfilled & Declined Order Log Audit Trail</li>
+                            <li class="flex items-center"><i class="fas fa-barcode text-teal-600 mr-2"></i> Hardware Laser Barcode & Camera Scanner</li>
+                        </ul>
+                    </div>
+                    <button @click="workerAuthModalOpen = true" class="relative z-10 w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl shadow-lg shadow-slate-900/20 transition duration-200 flex items-center justify-center space-x-2 text-sm">
+                        <span x-text="t('enterStaff')">Authenticate Staff Passcode</span>
+                        <i class="fas fa-lock"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. CUSTOMER PORTAL VIEW -->
+        <section x-show="currentView === 'customer'" class="space-y-8">
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-md space-y-6">
+                <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="relative w-full md:w-96">
+                        <i class="fas fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" x-model="searchQuery" :placeholder="t('searchPlaceholder')" class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                    </div>
+
+                    <div class="flex items-center space-x-2 w-full md:w-auto">
+                        <button @click="customerTab = 'shop'" :class="customerTab === 'shop' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center space-x-1.5">
+                            <i class="fas fa-store"></i>
+                            <span>Catalog</span>
+                        </button>
+
+                        <button @click="customerTab = 'history'" :class="customerTab === 'history' ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="px-4 py-2.5 rounded-2xl text-xs font-bold transition flex items-center space-x-1.5 relative">
+                            <i class="fas fa-clock-rotate-left"></i>
+                            <span>My Orders</span>
+                            <span class="bg-slate-900 text-white text-[10px] px-2 py-0.5 rounded-full font-mono" x-text="customerOrderHistory.length"></span>
+                        </button>
+
+                        <button @click="chatOpen = true" class="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold rounded-2xl flex items-center space-x-2 text-xs transition">
+                            <i class="fas fa-comments text-amber-600"></i>
+                            <span class="hidden sm:inline" x-text="t('askPharmacist')">Ask Pharmacist</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div x-show="customerTab === 'shop'" class="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                    <template x-for="cat in categories" :key="cat">
+                        <button @click="selectedCategory = cat" 
+                                :class="selectedCategory === cat ? 'bg-brand-600 text-white shadow-md shadow-brand-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-2 capitalize"
+                                x-text="cat">
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- SHOP CATALOG SECTION -->
+            <div x-show="customerTab === 'shop'" class="space-y-6">
+                <template x-if="filteredCustomerProducts.length === 0">
+                    <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center text-slate-400 space-y-3 shadow-sm">
+                        <i class="fas fa-box-open text-5xl text-slate-300"></i>
+                        <h3 class="text-lg font-bold text-slate-700" x-text="t('noProducts')">No Products Currently Visible</h3>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto" x-text="t('noProductsDesc')">
+                            There are currently no items available in this category or matching your search symptom. Staff members can add items from the Staff Portal.
+                        </p>
+                    </div>
+                </template>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <template x-for="item in filteredCustomerProducts" :key="item.id">
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+                            <div>
+                                <div class="relative h-48 bg-slate-100 overflow-hidden flex items-center justify-center p-4">
+                                    <img :src="item.imageUrl" :alt="item.name" class="max-h-full object-contain group-hover:scale-105 transition duration-300" @error="$event.target.src='https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80'">
+                                    
+                                    <template x-if="item.isRare">
+                                        <div class="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg flex items-center space-x-1 cursor-help">
+                                            <i class="fas fa-star text-yellow-200"></i>
+                                            <span>RARE / HARD TO FIND</span>
+                                        </div>
+                                    </template>
+
+                                    <div class="absolute top-3 right-3">
+                                        <span x-show="item.stock > 0" class="bg-slate-900/70 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                                            <span x-text="item.stock"></span> in stock
+                                        </span>
+                                        <span x-show="item.stock <= 0" class="bg-rose-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider animate-bounce">
+                                            OUT OF STOCK!!
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="p-5 space-y-2">
+                                    <div class="text-[10px] font-bold text-brand-600 uppercase tracking-widest" x-text="item.category"></div>
+                                    <h3 class="font-bold text-slate-900 text-base leading-snug group-hover:text-brand-600 transition" x-text="item.name"></h3>
+                                    
+                                    <div class="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                                        <span class="bg-slate-100 px-2 py-0.5 rounded-md font-medium" x-text="'Dose: ' + item.concentration"></span>
+                                        <template x-if="item.tags">
+                                            <span class="bg-teal-50 text-teal-700 px-2 py-0.5 rounded-md font-bold text-[10px]" x-text="item.tags"></span>
+                                        </template>
+                                    </div>
+
+                                    <div class="pt-2 flex items-baseline space-x-2">
+                                        <template x-if="item.isOnSale">
+                                            <div class="flex items-baseline space-x-2">
+                                                <span class="text-xl font-black text-rose-600" x-text="item.salePrice + ' EGP'"></span>
+                                                <span class="text-xs text-slate-400 line-through font-semibold" x-text="item.price + ' EGP'"></span>
+                                                <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">SALE</span>
+                                            </div>
+                                        </template>
+                                        <template x-if="!item.isOnSale">
+                                            <span class="text-xl font-black text-slate-900" x-text="item.price + ' EGP'"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-5 pt-0 space-y-2">
+                                <template x-if="item.stock > 0">
+                                    <button @click="addToCart(item)" class="w-full py-3 bg-brand-50 hover:bg-brand-600 text-brand-700 hover:text-white font-bold rounded-2xl transition duration-200 flex items-center justify-center space-x-2 text-xs">
+                                        <i class="fas fa-plus"></i>
+                                        <span x-text="t('addToCart')">Add to Cart</span>
+                                    </button>
+                                </template>
+                                <template x-if="item.stock <= 0">
+                                    <button disabled class="w-full py-3 bg-slate-100 text-slate-400 font-bold rounded-2xl text-xs cursor-not-allowed">
+                                        Currently Unavailable
+                                    </button>
+                                </template>
+
+                                <button @click="toggleReminder(item)" 
+                                        :class="item.reminderSet ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'"
+                                        class="w-full py-1.5 border rounded-xl text-[10px] font-bold flex items-center justify-center space-x-1.5 transition">
+                                    <i class="fas fa-bell text-amber-500"></i>
+                                    <span x-text="item.reminderSet ? t('reminderActive') : t('remindMe')"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- CUSTOMER PERSONAL ORDER HISTORY TAB -->
+            <div x-show="customerTab === 'history'" class="space-y-4">
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 font-heading">My Order History & Loyalty Streak</h3>
+                        <p class="text-xs text-slate-500">Track current pending orders and completed past purchases.</p>
+                    </div>
+                    <div class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-2xl text-center shadow-md">
+                        <div class="text-[10px] font-bold uppercase tracking-wider">Loyalty Streak</div>
+                        <div class="text-lg font-black" x-text="customerTier.icon + ' ' + customerTier.name"></div>
+                    </div>
+                </div>
+
+                <template x-if="customerOrderHistory.length === 0">
+                    <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center text-slate-400 space-y-3">
+                        <i class="fas fa-receipt text-4xl"></i>
+                        <p class="text-sm">You haven't placed any orders yet.</p>
+                    </div>
+                </template>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <template x-for="ord in customerOrderHistory" :key="ord.id">
+                        <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm flex flex-col justify-between">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                                    <div>
+                                        <div class="text-xs font-mono font-bold text-slate-500" x-text="ord.id"></div>
+                                        <div class="text-[10px] text-slate-400" x-text="ord.timestamp"></div>
+                                    </div>
+                                    <span :class="{
+                                        'bg-amber-100 text-amber-800': ord.status === 'Pending',
+                                        'bg-emerald-100 text-emerald-800': ord.status === 'Completed',
+                                        'bg-rose-100 text-rose-800': ord.status === 'Declined'
+                                    }" class="px-3 py-1 font-bold text-[10px] rounded-full uppercase" x-text="ord.status"></span>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <template x-for="item in ord.items" :key="item.id">
+                                        <div class="flex justify-between text-xs text-slate-700">
+                                            <span><strong x-text="item.quantity + 'x'"></strong> <span x-text="item.name"></span></span>
+                                            <span class="font-mono text-slate-500" x-text="(item.isOnSale ? item.salePrice : item.price) * item.quantity + ' EGP'"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <template x-if="ord.declineReason">
+                                    <div class="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1">
+                                        <strong class="text-[10px] uppercase tracking-wider font-bold block">Reason for Cancellation:</strong>
+                                        <p x-text="ord.declineReason"></p>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
+                                <span class="text-xs font-bold text-slate-500">Total Paid</span>
+                                <span class="text-lg font-black text-slate-900" x-text="ord.totalPrice + ' EGP'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. WORKER / MANAGER PORTAL VIEW -->
+        <section x-show="currentView === 'worker'" class="space-y-8">
+            <div class="flex space-x-3 border-b border-slate-200 pb-4 overflow-x-auto">
+                <button @click="workerTab = 'orders'" :class="workerTab === 'orders' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
+                    <i class="fas fa-list-check"></i>
+                    <span x-text="t('tabOrders')">Customer Requests & Prescriptions</span>
+                    <span class="bg-brand-500 text-white px-2 py-0.5 rounded-full text-[10px]" x-text="pendingOrders.length"></span>
+                </button>
+                <button @click="workerTab = 'orderHistory'" :class="workerTab === 'orderHistory' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    <span>Fulfilled Order History & Log</span>
+                    <span class="bg-slate-600 text-white px-2 py-0.5 rounded-full text-[10px]" x-text="resolvedOrders.length"></span>
+                </button>
+                <button @click="workerTab = 'loyaltyConfig'" :class="workerTab === 'loyaltyConfig' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
+                    <i class="fas fa-award"></i>
+                    <span>Loyalty Tiers Config</span>
+                </button>
+                <button @click="workerTab = 'analytics'" :class="workerTab === 'analytics' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
+                    <i class="fas fa-chart-pie"></i>
+                    <span x-text="t('tabAnalytics')">Sales Analytics & Alerts</span>
+                </button>
+                <button @click="workerTab = 'restock'" :class="workerTab === 'restock' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
+                    <i class="fas fa-boxes-packing"></i>
+                    <span x-text="t('tabRestock')">Add / Edit Inventory Item</span>
+                </button>
+                <button @click="workerTab = 'inventory'" :class="workerTab === 'inventory' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
+                    <i class="fas fa-eye-slash"></i>
+                    <span x-text="t('tabStock')">Manage Stock & Visibility</span>
+                    <span class="bg-amber-500 text-white px-2 py-0.5 rounded-full text-[10px]" x-text="products.length"></span>
+                </button>
+                <button @click="workerTab = 'chat'" :class="workerTab === 'chat' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'" class="px-5 py-2.5 rounded-2xl font-bold text-xs transition flex items-center space-x-2 shadow-sm whitespace-nowrap">
+                    <i class="fas fa-headset"></i>
+                    <span>Live Helpline Terminal</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: CUSTOMER REQUESTS -->
+            <div x-show="workerTab === 'orders'" class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 font-heading">Pending Customer Orders</h3>
+                        <p class="text-xs text-slate-500">Hardware Scanner Tip: Laser scan any physical barcode key at any time on this tab for fast stock lookup.</p>
+                    </div>
+                    <button @click="playNotificationSound()" class="text-xs font-bold text-brand-700 bg-brand-50 px-3 py-1.5 rounded-xl hover:bg-brand-100">
+                        <i class="fas fa-volume-high mr-1"></i> Test "TING!" Chime
+                    </button>
+                </div>
+
+                <template x-if="pendingOrders.length === 0">
+                    <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center text-slate-400 space-y-3">
+                        <i class="fas fa-receipt text-4xl"></i>
+                        <p class="text-sm">No pending customer requests right now.</p>
+                    </div>
+                </template>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="ord in pendingOrders" :key="ord.id">
+                        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4 flex flex-col justify-between">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                                    <div>
+                                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer</div>
+                                        <div class="font-bold text-slate-900 text-lg flex items-center space-x-1">
+                                            <span x-text="ord.username"></span>
+                                        </div>
+                                        <div class="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md inline-block mt-1">
+                                            <span x-text="ord.customerTierIcon"></span>
+                                            <span x-text="ord.customerTierName"></span>
+                                            <span class="font-mono text-slate-500">(<span x-text="ord.customerOrdersCount"></span> orders)</span>
+                                        </div>
+                                    </div>
+                                    <span class="px-3 py-1 bg-amber-50 text-amber-700 font-bold text-[10px] rounded-full uppercase" x-text="ord.status"></span>
+                                </div>
+
+                                <template x-if="ord.prescriptionImage">
+                                    <div class="p-3 bg-teal-50 border border-teal-200 rounded-2xl space-y-2">
+                                        <div class="text-xs font-bold text-teal-900 flex items-center">
+                                            <i class="fas fa-file-prescription mr-1.5 text-teal-600"></i> Attached Doctor Prescription
+                                        </div>
+                                        <img :src="ord.prescriptionImage" class="w-full h-32 object-cover rounded-xl border border-teal-200 cursor-pointer" @click="showModal('Prescription Photo', '<img src=\'' + ord.prescriptionImage + '\' class=\'max-w-full rounded-xl\'>')">
+                                    </div>
+                                </template>
+
+                                <div class="space-y-1.5">
+                                    <template x-for="item in ord.items" :key="item.id">
+                                        <div class="flex justify-between text-xs text-slate-600">
+                                            <span><strong x-text="item.quantity + 'x'"></strong> <span x-text="item.name"></span> (<span x-text="item.concentration"></span>)</span>
+                                            <span class="font-mono" x-text="(item.isOnSale ? item.salePrice : item.price) * item.quantity + ' EGP'"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <template x-if="ord.tierDiscountPercent > 0">
+                                    <div class="flex justify-between text-xs text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg">
+                                        <span>Tier Discount (<span x-text="ord.tierDiscountPercent + '%'"></span>):</span>
+                                        <span class="font-mono" x-text="'-' + ord.discountAmount + ' EGP'"></span>
+                                    </div>
+                                </template>
+
+                                <template x-if="ord.notes">
+                                    <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs space-y-1">
+                                        <span class="font-bold text-amber-900 text-[10px] uppercase tracking-wider flex items-center">
+                                            <i class="fas fa-note-sticky mr-1 text-amber-600"></i> Customer Note:
+                                        </span>
+                                        <p class="text-slate-700 italic" x-text="ord.notes"></p>
+                                    </div>
+                                </template>
+
+                                <div class="pt-2 border-t border-slate-100 text-xs space-y-1 bg-slate-50 p-2.5 rounded-xl">
+                                    <div class="flex items-center text-slate-700">
+                                        <i class="fas fa-phone text-brand-600 text-[10px] mr-2 w-3"></i>
+                                        <span class="font-semibold mr-1">Phone:</span>
+                                        <span x-text="ord.phone || 'N/A'"></span>
+                                    </div>
+                                    <div class="flex items-center text-slate-700">
+                                        <i class="fas fa-location-dot text-brand-600 text-[10px] mr-2 w-3"></i>
+                                        <span class="font-semibold mr-1">Address:</span>
+                                        <span x-text="ord.address || 'N/A'"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-bold uppercase">Total Payable</div>
+                                        <div class="text-xl font-black text-slate-900" x-text="ord.totalPrice + ' EGP'"></div>
+                                    </div>
+                                    <button @click="fulfillOrder(ord.id)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition">
+                                        Complete & Increment Streak
+                                    </button>
+                                </div>
+
+                                <button @click="declineOrderPrompt(ord)" class="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition border border-rose-200">
+                                    Decline / Cancel Order & Restore Stock
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- TAB 2: STAFF ORDER HISTORY LOG -->
+            <div x-show="workerTab === 'orderHistory'" class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 font-heading">Completed & Declined Order Log</h3>
+                        <p class="text-xs text-slate-500">Historical audit trail of all customer transactions and resolved requests.</p>
+                    </div>
+                </div>
+
+                <template x-if="resolvedOrders.length === 0">
+                    <div class="bg-white p-12 rounded-3xl border border-slate-200 text-center text-slate-400 space-y-3">
+                        <i class="fas fa-folder-open text-4xl"></i>
+                        <p class="text-sm">No fulfilled or declined orders in log history yet.</p>
+                    </div>
+                </template>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="ord in resolvedOrders" :key="ord.id">
+                        <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-3 shadow-sm flex flex-col justify-between">
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-start border-b pb-2">
+                                    <div>
+                                        <span class="text-xs font-mono font-bold text-slate-700 block" x-text="ord.id"></span>
+                                        <span class="text-[10px] text-slate-400" x-text="ord.timestamp"></span>
+                                    </div>
+                                    <span :class="ord.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'" class="px-2.5 py-0.5 font-bold text-[10px] rounded-full uppercase" x-text="ord.status"></span>
+                                </div>
+
+                                <div class="text-xs">
+                                    <strong class="text-slate-900" x-text="ord.username"></strong>
+                                    <span class="text-slate-500 text-[10px] block" x-text="ord.phone + ' • ' + ord.address"></span>
+                                </div>
+
+                                <div class="bg-slate-50 p-2.5 rounded-xl space-y-1 text-xs">
+                                    <template x-for="item in ord.items" :key="item.id">
+                                        <div class="flex justify-between text-slate-600">
+                                            <span><strong x-text="item.quantity + 'x'"></strong> <span x-text="item.name"></span></span>
+                                            <span class="font-mono text-[11px]" x-text="(item.isOnSale ? item.salePrice : item.price) * item.quantity + ' EGP'"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <template x-if="ord.declineReason">
+                                    <div class="p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800">
+                                        <strong class="text-[10px] uppercase block font-bold">Cancellation Reason:</strong>
+                                        <p x-text="ord.declineReason"></p>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-100 flex justify-between items-baseline">
+                                <span class="text-xs text-slate-400 font-bold uppercase">Total Charged</span>
+                                <span class="text-lg font-black text-slate-900" x-text="ord.totalPrice + ' EGP'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- TAB 3: LOYALTY TIERS CONFIGURATION -->
+            <div x-show="workerTab === 'loyaltyConfig'" class="max-w-4xl mx-auto space-y-6">
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 font-heading">Loyalty Tier & Discount Settings</h3>
+                        <p class="text-xs text-slate-500">Configure order streak thresholds and automatic cart discounts for faithful customers.</p>
+                    </div>
+
+                    <div class="grid gap-4">
+                        <template x-for="tier in loyaltyTiersConfig" :key="tier.id">
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-3xl" x-text="tier.icon"></span>
+                                    <div>
+                                        <h4 class="font-bold text-slate-900 text-sm" x-text="tier.name"></h4>
+                                        <p class="text-xs text-slate-500" x-text="'Required Completed Orders: ' + tier.minOrders + ' - ' + (tier.maxOrders === Infinity ? 'Unlimited' : tier.maxOrders)"></p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    <label class="text-xs font-bold text-slate-600">Discount %</label>
+                                    <input type="number" min="0" max="100" x-model.number="tier.discount" class="w-20 px-3 py-1.5 rounded-xl border border-slate-300 font-bold text-sm text-center focus:ring-2 focus:ring-brand-500 outline-none">
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <button @click="showModal('Loyalty Config Saved', 'Customer order streak discounts updated successfully!')" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl text-xs shadow-md">
+                        Save Loyalty Discounts
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 4: SALES ANALYTICS & LOW STOCK ALERTS -->
+            <div x-show="workerTab === 'analytics'" class="space-y-6">
+                <div class="grid sm:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Sales Revenue</div>
+                        <div class="text-3xl font-black text-brand-600" x-text="totalSalesRevenue + ' EGP'"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Completed Orders</div>
+                        <div class="text-3xl font-black text-emerald-600" x-text="orders.filter(o => o.status === 'Completed').length"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Low Stock Alerts (&lt; 5)</div>
+                        <div class="text-3xl font-black text-rose-600" x-text="lowStockItems.length"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-lg font-bold text-slate-900 font-heading">Low Stock Inventory Warnings</h3>
+                    <template x-if="lowStockItems.length === 0">
+                        <p class="text-xs text-slate-400 italic">All items are sufficiently stocked.</p>
+                    </template>
+                    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <template x-for="item in lowStockItems" :key="item.id">
+                            <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-slate-900 text-sm" x-text="item.name"></div>
+                                    <div class="text-xs text-rose-700 font-semibold" x-text="item.stock + ' units left'"></div>
+                                </div>
+                                <button @click="quickBumpStock(item.id, 10)" class="px-3 py-1 bg-rose-600 text-white font-bold rounded-xl text-xs hover:bg-rose-700 transition">
+                                    +10 Quick Bump
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: RESTOCK & ADD ITEM FORM WITH EGYPTIAN MASTER AUTO-FILL -->
+            <div x-show="workerTab === 'restock'" class="max-w-2xl mx-auto space-y-6">
+                <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900 font-heading">Add / Edit Inventory Item</h3>
+                        <p class="text-xs text-slate-500">Enter medication details manually, or select from the pre-loaded Egyptian Master Database.</p>
+                    </div>
+
+                    <!-- EGYPTIAN MASTER MEDICINE PRE-LOAD AUTOCOMPLETE -->
+                    <div class="p-4 bg-teal-50 border border-teal-200 rounded-2xl space-y-2">
+                        <label class="block text-xs font-bold text-teal-900 uppercase tracking-wider">
+                            <i class="fas fa-bolt text-teal-600 mr-1"></i> Pre-Loaded Egyptian Drug Auto-Fill:
+                        </label>
+                        <select @change="autoFillEgyptianMed($event.target.value)" class="w-full px-4 py-2.5 rounded-xl border border-teal-300 bg-white font-semibold text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="">-- Choose Egyptian Medicine to Auto-Fill Form --</option>
+                            <template x-for="med in masterEgyptianDb" :key="med.name">
+                                <option :value="med.name" x-text="med.name + ' (' + med.concentration + ')'"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <form @submit.prevent="handleStockSubmit()" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2">
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Item Name</label>
+                                <input type="text" x-model="stockForm.name" required placeholder="e.g. Panadol Extra" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Barcode Key</label>
+                                <div class="flex space-x-2">
+                                    <input type="text" x-model="stockForm.barcode" placeholder="Scan or type barcode" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono focus:ring-2 focus:ring-brand-500 outline-none">
+                                    <button type="button" @click="openBarcodeScannerModal()" class="px-3 bg-brand-100 text-brand-700 font-bold rounded-xl text-xs hover:bg-brand-200 transition">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Category</label>
+                                <select x-model="stockForm.category" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                                    <template x-for="c in categories.filter(x => x !== 'all')" :key="c">
+                                        <option :value="c" x-text="c"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Active Tags / Symptoms</label>
+                                <input type="text" x-model="stockForm.tags" placeholder="e.g. headache, fever, painkiller" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Concentration / Dose</label>
+                                <input type="text" x-model="stockForm.concentration" placeholder="e.g. 500mg" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Standard Price (EGP)</label>
+                                <input type="number" step="0.5" x-model="stockForm.price" required placeholder="0.00" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Stock Units</label>
+                                <input type="number" x-model="stockForm.stock" required placeholder="0" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                            </div>
+
+                            <div class="col-span-2 space-y-3 pt-2">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" x-model="stockForm.isOnSale" class="rounded text-brand-600 focus:ring-brand-500 w-4 h-4">
+                                    <span class="text-xs font-bold text-slate-700">Put this item on Sale Discount</span>
+                                </label>
+
+                                <div x-show="stockForm.isOnSale" class="pl-6">
+                                    <label class="block text-xs font-bold text-rose-600 uppercase mb-1">Sale Price (EGP)</label>
+                                    <input type="number" step="0.5" x-model="stockForm.salePrice" placeholder="0.00" class="w-full px-4 py-2.5 rounded-xl border border-rose-200 text-sm focus:ring-2 focus:ring-rose-500 outline-none">
+                                </div>
+
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="checkbox" x-model="stockForm.isRare" class="rounded text-amber-500 focus:ring-amber-500 w-4 h-4">
+                                    <span class="text-xs font-bold text-slate-700">Mark as "Rare / Hard to Find" Badge</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-sm transition shadow-lg">
+                            Save Product to Inventory Catalog
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TAB 6: MANAGE STOCK & VISIBILITY WITH BULK CSV IMPORT -->
+            <div x-show="workerTab === 'inventory'" class="space-y-6">
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900 font-heading">Manage Catalog & Bulk Upload</h3>
+                        <p class="text-xs text-slate-500">Toggle item visibility or bulk import products via CSV/Excel template.</p>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button @click="downloadCsvTemplate()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition border border-slate-300">
+                            <i class="fas fa-download mr-1"></i> Download CSV Template
+                        </button>
+                        
+                        <label class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs transition cursor-pointer shadow-md">
+                            <i class="fas fa-file-excel mr-1"></i> Upload CSV / Excel
+                            <input type="file" accept=".csv" class="hidden" @change="handleCsvUpload($event)">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="item in products" :key="item.id">
+                        <div :class="item.hidden ? 'opacity-60 bg-slate-100' : 'bg-white'" class="p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between transition">
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-start">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600" x-text="item.category"></span>
+                                    <span :class="item.hidden ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-800'" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full" x-text="item.hidden ? 'HIDDEN FROM SHOP' : 'VISIBLE'"></span>
+                                </div>
+                                <h4 class="font-bold text-slate-900 text-lg" x-text="item.name"></h4>
+                                <div class="text-xs text-slate-500" x-text="'Barcode: ' + (item.barcode || 'N/A')"></div>
+                                <div class="flex items-center space-x-3 text-xs pt-2">
+                                    <span class="font-black text-slate-900" x-text="item.price + ' EGP'"></span>
+                                    <span class="font-bold text-slate-500" x-text="item.stock + ' units available'"></span>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-100 flex items-center justify-between space-x-2">
+                                <button @click="quickBumpStock(item.id, 10)" class="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold rounded-xl text-xs">
+                                    +10 Stock
+                                </button>
+                                
+                                <button @click="toggleProductVisibility(item.id)" :class="item.hidden ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'" class="px-3 py-1.5 font-bold rounded-xl text-xs">
+                                    <span x-text="item.hidden ? 'Show' : 'Hide'"></span>
+                                </button>
+
+                                <button @click="deleteProduct(item.id)" class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold rounded-xl text-xs">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- TAB 7: LIVE HELPLINE CHAT TERMINAL FOR STAFF -->
+            <div x-show="workerTab === 'chat'" class="max-w-3xl mx-auto space-y-4">
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-xl font-bold text-slate-900 font-heading">Live Patient Helpline Terminal</h3>
+                    <div class="h-96 border border-slate-100 rounded-2xl p-4 overflow-y-auto bg-slate-50 space-y-3">
+                        <template x-for="msg in chatMessages" :key="msg.id">
+                            <div :class="msg.sender.startsWith('Staff') ? 'text-right' : 'text-left'" class="space-y-1">
+                                <div class="text-[10px] text-slate-400 font-bold" x-text="msg.sender + ' • ' + msg.time"></div>
+                                <div :class="msg.sender.startsWith('Staff') ? 'bg-brand-600 text-white' : 'bg-white text-slate-800 border border-slate-200'" class="inline-block p-3 rounded-2xl text-xs max-w-md shadow-sm" x-text="msg.text"></div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <input type="text" x-model="workerReplyMessage" @keydown.enter="sendWorkerReply()" placeholder="Type response to patient..." class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <button @click="sendWorkerReply()" class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl text-xs">
+                            Send Reply
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SHOPPING CART DRAWER (RIGHT SLIDE-OVER) -->
+    <div x-show="cartDrawerOpen" class="fixed inset-0 z-50 overflow-hidden" x-cloak>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" @click="cartDrawerOpen = false"></div>
+        
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+                <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+                    <h3 class="text-xl font-bold font-heading text-slate-900 flex items-center">
+                        <i class="fas fa-basket-shopping text-brand-600 mr-2"></i>
+                        <span>Shopping Cart</span>
+                    </h3>
+                    <button @click="cartDrawerOpen = false" class="text-slate-400 hover:text-slate-600 text-xl font-bold">
+                        &times;
+                    </button>
+                </div>
+
+                <div class="p-6 overflow-y-auto flex-1 space-y-4">
+                    <template x-if="cart.length === 0">
+                        <div class="text-center py-12 text-slate-400 space-y-2">
+                            <i class="fas fa-cart-flatbed text-4xl"></i>
+                            <p class="text-sm">Your cart is currently empty.</p>
+                        </div>
+                    </template>
+
+                    <template x-for="item in cart" :key="item.id">
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs" x-text="item.name"></h4>
+                                <div class="text-[10px] text-slate-500" x-text="(item.isOnSale ? item.salePrice : item.price) + ' EGP each'"></div>
+                            </div>
+
+                            <div class="flex items-center space-x-2">
+                                <button @click="removeFromCart(item)" class="w-7 h-7 bg-white text-slate-600 rounded-lg shadow-sm border font-bold text-xs flex items-center justify-center">-</button>
+                                <span class="font-bold text-xs" x-text="item.quantity"></span>
+                                <button @click="addToCart(item)" class="w-7 h-7 bg-white text-slate-600 rounded-lg shadow-sm border font-bold text-xs flex items-center justify-center">+</button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- PRESCRIPTION PHOTO UPLOAD OPTION -->
+                    <div class="pt-4 border-t border-slate-100 space-y-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">
+                            <i class="fas fa-file-prescription text-teal-600 mr-1"></i> Attach Doctor Prescription (Optional)
+                        </label>
+                        <input type="file" accept="image/*" @change="handlePrescriptionUpload($event)" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
+                        <template x-if="customerCheckout.prescriptionImage">
+                            <div class="text-[10px] text-emerald-600 font-bold flex items-center">
+                                <i class="fas fa-circle-check mr-1"></i> Prescription image attached!
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- CHECKOUT INPUT DETAILS -->
+                    <div class="space-y-3 pt-4 border-t border-slate-100">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Phone Number</label>
+                            <input type="text" x-model="customerCheckout.phone" placeholder="e.g. 01012345678" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Delivery Address</label>
+                            <input type="text" x-model="customerCheckout.address" placeholder="Building, Street, Apartment" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Special Notes for Pharmacist</label>
+                            <textarea x-model="customerCheckout.notes" rows="2" placeholder="e.g. Call before delivery..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 border-t border-slate-200 space-y-4 bg-slate-50">
+                    <template x-if="customerTier.discount > 0">
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs text-amber-900 font-bold">
+                            <span class="flex items-center space-x-1.5">
+                                <span x-text="customerTier.icon"></span>
+                                <span>Streak Discount (<span x-text="customerTier.name"></span>)</span>
+                            </span>
+                            <span class="font-mono text-emerald-700" x-text="'-' + cartDiscountAmount + ' EGP (' + customerTier.discount + '%)'"></span>
+                        </div>
+                    </template>
+
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="font-bold text-slate-600">Total Bill</span>
+                        <div class="text-right">
+                            <template x-if="customerTier.discount > 0">
+                                <span class="text-xs text-slate-400 line-through block font-semibold" x-text="rawCartTotalPrice + ' EGP'"></span>
+                            </template>
+                            <span class="text-xl font-black text-slate-900" x-text="cartTotalPrice + ' EGP'"></span>
+                        </div>
+                    </div>
+
+                    <button @click="submitCustomerOrder()" :disabled="cart.length === 0 && !customerCheckout.prescriptionImage" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl transition shadow-lg shadow-brand-600/20 disabled:opacity-50">
+                        Submit Order Request
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HELPLINE CHAT DRAWER FOR CUSTOMER -->
+    <div x-show="chatOpen" class="fixed inset-0 z-50 overflow-hidden" x-cloak>
+        <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" @click="chatOpen = false"></div>
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+                <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-base flex items-center">
+                            <i class="fas fa-headset mr-2 text-amber-400"></i>
+                            <span>Duty Pharmacist Live Helpline</span>
+                        </h3>
+                        <p class="text-[10px] text-slate-400">Ask dosage, drug alternative or stock questions.</p>
+                    </div>
+                    <button @click="chatOpen = false" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                </div>
+
+                <div class="p-4 flex-1 overflow-y-auto space-y-3 bg-slate-50">
+                    <template x-for="msg in chatMessages" :key="msg.id">
+                        <div :class="msg.sender === customerAccount.username ? 'text-right' : 'text-left'" class="space-y-1">
+                            <div class="text-[10px] text-slate-400 font-bold" x-text="msg.sender + ' • ' + msg.time"></div>
+                            <div :class="msg.sender === customerAccount.username ? 'bg-brand-600 text-white' : 'bg-white text-slate-800 border border-slate-200'" class="inline-block p-3 rounded-2xl text-xs max-w-xs shadow-sm" x-text="msg.text"></div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="p-4 border-t border-slate-200 flex space-x-2 bg-white">
+                    <input type="text" x-model="newChatMessage" @keydown.enter="sendChatMessage()" placeholder="Ask pharmacist..." class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <button @click="sendChatMessage()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HARDWARE / CAMERA BARCODE MODAL -->
+    <div x-show="barcodeScannerOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 text-center shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-900">Scan Product Barcode</h3>
+            <div id="barcode-reader" class="w-full bg-slate-100 rounded-2xl overflow-hidden min-h-[200px]"></div>
+            <p class="text-xs text-slate-500" x-text="scannedResult ? 'Scanned: ' + scannedResult : 'Point device camera at medicine box barcode'"></p>
+            <button @click="closeBarcodeScannerModal()" class="w-full py-3 bg-slate-200 font-bold text-xs rounded-xl hover:bg-slate-300">
+                Cancel / Close Scanner
+            </button>
+        </div>
+    </div>
+
+    <!-- CUSTOMER AUTH MODAL -->
+    <div x-show="customerAuthModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl">
+            <div>
+                <h3 class="text-2xl font-bold font-heading text-slate-900">Customer Access</h3>
+                <p class="text-xs text-slate-500">Enter your name and delivery location to begin shopping.</p>
+            </div>
+
+            <form @submit.prevent="handleCustomerAuth()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Your Full Name</label>
+                    <input type="text" x-model="customerForm.username" required placeholder="e.g. Ahmed Hassan" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Phone Number</label>
+                    <input type="text" x-model="customerForm.phone" required placeholder="01012345678" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Delivery Address</label>
+                    <input type="text" x-model="customerForm.address" required placeholder="Street, Building, City" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <button type="submit" class="w-full py-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-2xl text-sm transition shadow-lg">
+                    Start Shopping & Order
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- WORKER AUTH MODAL -->
+    <div x-show="workerAuthModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl">
+            <div>
+                <h3 class="text-2xl font-bold font-heading text-slate-900">Staff Authentication</h3>
+                <p class="text-xs text-slate-500">Enter your 12-character private staff passcode ID.</p>
+            </div>
+
+            <form @submit.prevent="handleWorkerAuth()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">12-Character Private ID</label>
+                    <input type="password" x-model="workerForm.privateId" required placeholder="e.g. ESM194827163" class="w-full px-4 py-3 rounded-xl border border-slate-200 font-mono text-sm focus:ring-2 focus:ring-slate-900 outline-none">
+                </div>
+
+                <template x-if="authErrorMessage">
+                    <p class="text-xs text-rose-600 font-bold" x-text="authErrorMessage"></p>
+                </template>
+
+                <button type="submit" class="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl text-sm transition shadow-lg">
+                    Unlock Staff Dashboard
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- GENERAL ALERT MODAL -->
+    <div x-show="modalAlert.open" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak>
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 text-center shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-900 font-heading" x-text="modalAlert.title"></h3>
+            <div class="text-xs text-slate-600 leading-relaxed" x-html="modalAlert.message"></div>
+            <button @click="modalAlert.open = false" class="w-full py-3 bg-slate-900 text-white font-bold text-xs rounded-xl">
+                Dismiss
+            </button>
+        </div>
+    </div>
+
+    <!-- ALPINE SCRIPT -->
+    <script>
+        function pharmacyApp() {
+            return {
+                lang: 'en',
+                currentView: 'landing',
+                customerTab: 'shop',
+                customerAuthModalOpen: false,
+                workerAuthModalOpen: false,
+                cartDrawerOpen: false,
+                chatOpen: false,
+                barcodeScannerOpen: false,
+                html5QrCodeScanner: null,
+                scannedResult: '',
+                workerTab: 'orders',
+                foldableSaleOpen: false,
+                authErrorMessage: '',
+
+                // Hardware Scanner Input Buffer
+                barcodeBuffer: '',
+                lastKeyTime: 0,
+
+                searchQuery: '',
+                selectedCategory: 'all',
+                categories: ['all', 'syrup', 'pills', 'hair conditioners', 'soap', 'droplets', 'cosmetics'],
+
+                customerForm: { username: '', phone: '', address: '' },
+                customerCheckout: { phone: '', address: '', notes: '', prescriptionImage: null },
+                workerForm: { privateId: '' },
+
+                customerAccount: { username: 'Guest', phone: '', address: '', completedOrders: 0 },
+                currentWorkerName: '',
+
+                loyaltyTiersConfig: [
+                    { id: 'new', name: 'New Customer', minOrders: 0, maxOrders: 14, icon: '🌱', discount: 0 },
+                    { id: 'known', name: 'Known Customer', minOrders: 15, maxOrders: 29, icon: '🏷️', discount: 5 },
+                    { id: 'loyal', name: 'Loyal Customer', minOrders: 30, maxOrders: 49, icon: '👑', discount: 10 },
+                    { id: 'honorable', name: 'Honorable Customer', minOrders: 50, maxOrders: 74, icon: '⭐', discount: 15 },
+                    { id: 'prideful', name: 'Prideful Customer', minOrders: 75, maxOrders: 99, icon: '🏆', discount: 20 },
+                    { id: 'mythical', name: 'Mythical Customer', minOrders: 100, maxOrders: Infinity, icon: '⚡', discount: 25 }
+                ],
+
+                masterEgyptianDb: [
+                    { name: "Panadol Extra", category: "pills", concentration: "500mg Paracetamol + 65mg Caffeine", tags: "headache, fever, painkiller, cold", defaultPrice: 45, barcode: "6223000123401" },
+                    { name: "Congestal", category: "pills", concentration: "Paracetamol + Pseudoephedrine", tags: "runny nose, flu, fever, sinus", defaultPrice: 31.5, barcode: "6223000123402" },
+                    { name: "Augmentin", category: "pills", concentration: "1g Amoxicillin + Clavulanic Acid", tags: "antibiotic, bacterial infection", defaultPrice: 131, barcode: "6223000123403" },
+                    { name: "Antinal", category: "pills", concentration: "200mg Nifuroxazide", tags: "diarrhea, intestinal antiseptic", defaultPrice: 32, barcode: "6223000123404" },
+                    { name: "Cataflam", category: "pills", concentration: "50mg Diclofenac Potassium", tags: "toothache, joint pain, anti-inflammatory", defaultPrice: 48.5, barcode: "6223000123405" },
+                    { name: "Cetafen", category: "syrup", concentration: "120ml Paracetamol + Ibuprofen", tags: "kids fever, relief syrup, pain", defaultPrice: 28, barcode: "6223000123406" },
+                    { name: "Otrivin", category: "droplets", concentration: "0.1% Adult Nasal Drops", tags: "nasal congestion, blocked nose", defaultPrice: 18, barcode: "6223000123407" }
+                ],
+
+                i18n: {
+                    en: {
+                        brandName: "Al-Tawfiqia Pharmacy",
+                        tagline: "Premier Healthcare & Cosmetics",
+                        emergency: "Emergency Helpline 24/7",
+                        switchPortal: "Portal Switch",
+                        cart: "Cart",
+                        customerPortal: "Customer Portal",
+                        staffPortal: "Staff Portal",
+                        landingTitle: "Your Trusted Partner in",
+                        landingSubtitle: "Health, Care & Wellness",
+                        landingDesc: "Select your access portal below to browse our certified medicine & cosmetics catalog, or manage pharmacy stock and patient requests.",
+                        customerPortalDesc: "Enter with your Username, Phone Number & Location to shop medicine, cosmetics, and send prescriptions directly to staff.",
+                        staffPortalDesc: "Protected access for Al-Tawfiqia staff. Authenticate using your official 12-character private ID to manage stock, sales analytics, and prescriptions.",
+                        enterCustomer: "Enter Customer Portal",
+                        enterStaff: "Authenticate Staff Passcode",
+                        searchPlaceholder: "Search medicine, active ingredient, barcode or symptom...",
+                        askPharmacist: "Ask Pharmacist via Helpline Chat",
+                        noProducts: "No Products Currently Visible",
+                        noProductsDesc: "There are currently no items available matching your search. Staff members can add items from the Staff Portal.",
+                        addToCart: "Add to Cart",
+                        remindMe: "Remind Me to Re-Order",
+                        reminderActive: "Refill Reminder Active",
+                        tabOrders: "Customer Requests & Prescriptions",
+                        tabAnalytics: "Sales Analytics & Alerts",
+                        tabRestock: "Add / Edit Inventory Item",
+                        tabStock: "Manage Stock & Visibility"
+                    },
+                    ar: {
+                        brandName: "صيدلية التوفيقية",
+                        tagline: "الرائدة في الرعاية الصحية ومستحضرات التجميل",
+                        emergency: "طوارئ الصيدلية 24/7",
+                        switchPortal: "تبديل البوابة",
+                        cart: "عربة التسوق",
+                        customerPortal: "بوابة العملاء",
+                        staffPortal: "بوابة طاقم الصيدلية",
+                        landingTitle: "شريكك الموثوق في",
+                        landingSubtitle: "الصحة والنعيم والرعاية",
+                        landingDesc: "اختر بوابة الدخول أدناه لتصفح منتجاتنا الطبية والحرية في تقديم طلبات الروشتة ورسائل الدعم.",
+                        customerPortalDesc: "أنشئ حساباً باسمك ورقم الهاتف والعنوان لطلب الأدوية ورفع صورة الروشتة مباشرة.",
+                        staffPortalDesc: "دخول مخصص لطاقم صيدلية التوفيقية بكلمة المرور لإدارة المخزون والتحليلات والطلبات.",
+                        enterCustomer: "الدخول لبوابة العملاء",
+                        enterStaff: "تسجيل دخول الصيدلي",
+                        searchPlaceholder: "ابحث عن دواء، باركود، المادة الفعالة، أو الأعراض...",
+                        askPharmacist: "اسأل الصيدلي عبر الشات المباشر",
+                        noProducts: "لا توجد أدوية مطابقة حالياً",
+                        noProductsDesc: "لا تتوفر أدوية حالياً في هذا القسم أو بناءً على بحثك.",
+                        addToCart: "إضافة للسلة",
+                        remindMe: "ذكّرني بإعادة الطلب",
+                        reminderActive: "التذكير مفعّل",
+                        tabOrders: "طلبات العملاء والروشتات",
+                        tabAnalytics: "تحليلات المبيعات والتنبيهات",
+                        tabRestock: "إضافة أو تعديل دواء",
+                        tabStock: "إدارة المخزون والرؤية"
+                    }
+                },
+
+                t(key) {
+                    return this.i18n[this.lang][key] || key;
+                },
+
+                staffRoster: [
+                    { name: "Eslam Mustafa", id: "ESM194827163" },
+                    { name: "Doaa", id: "DOA837194025" },
+                    { name: "Eman Mustafa", id: "EMN519284037" },
+                    { name: "Moataz Adham", id: "MTZ748392016" },
+                    { name: "Hayam Said", id: "HYM920183746" }
+                ],
+
+                quotes: [
+                    "\"He who has health has hope; and he who has hope, has everything.\"",
+                    "\"Take care of your body. It's the only place you have to live in.\"",
+                    "\"The first wealth is health.\" — Ralph Waldo Emerson"
+                ],
+                dailyQuote: '',
+
+                products: [],
+
+                stockForm: { id: null, name: '', barcode: '', category: 'pills', tags: '', concentration: '', price: '', salePrice: '', isOnSale: false, stock: '', isRare: false, imageUrl: '', hidden: false },
+                cart: [],
+                orders: [],
+
+                chatMessages: [
+                    { id: '1', sender: 'Al-Tawfiqia Desk', text: 'Hello! How can our pharmacy staff assist you today?', time: '10:00 AM' }
+                ],
+                newChatMessage: '',
+                workerReplyMessage: '',
+
+                modalAlert: { open: false, title: '', message: '' },
+
+                init() {
+                    this.dailyQuote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+                    this.initHardwareScannerListener();
+                },
+
+                // PHYSICAL HARDWARE LASER SCANNER LISTENER
+                initHardwareScannerListener() {
+                    window.addEventListener('keydown', (e) => {
+                        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+                        if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+                            return;
+                        }
+
+                        const currentTime = Date.now();
+                        const timeDiff = currentTime - this.lastKeyTime;
+                        this.lastKeyTime = currentTime;
+
+                        if (e.key === 'Enter') {
+                            if (this.barcodeBuffer.length >= 3 && timeDiff < 80) {
+                                e.preventDefault();
+                                this.handleHardwareBarcodeScan(this.barcodeBuffer.trim());
+                            }
+                            this.barcodeBuffer = '';
+                        } else if (e.key.length === 1) {
+                            if (timeDiff > 100) {
+                                this.barcodeBuffer = e.key;
+                            } else {
+                                this.barcodeBuffer += e.key;
+                            }
+                        }
+                    });
+                },
+
+                handleHardwareBarcodeScan(scannedBarcode) {
+                    if (this.currentView !== 'worker') {
+                        this.showModal('Laser Barcode Scanned', 'Barcode scanned: <strong>' + scannedBarcode + '</strong>. Switch to Staff Portal to adjust inventory.');
+                        return;
+                    }
+
+                    this.playNotificationSound();
+                    const existingProd = this.products.find(p => p.barcode === scannedBarcode);
+                    if (existingProd) {
+                        existingProd.stock += 1;
+                        this.showModal('Laser Scanner Quick Stock Bump', 'Recognized barcode <strong>' + scannedBarcode + '</strong>! Incremented <strong>' + existingProd.name + '</strong> stock to ' + existingProd.stock + ' units.');
+                    } else {
+                        this.workerTab = 'restock';
+                        this.stockForm.barcode = scannedBarcode;
+                        this.showModal('New Laser Barcode Captured', 'Barcode <strong>' + scannedBarcode + '</strong> pre-filled into Add Item form! Enter item details to save.');
+                    }
+                },
+
+                get customerTier() {
+                    const count = this.customerAccount.completedOrders || 0;
+                    return this.loyaltyTiersConfig.find(t => count >= t.minOrders && count <= t.maxOrders) || this.loyaltyTiersConfig[0];
+                },
+
+                showModal(title, message) {
+                    this.modalAlert = { open: true, title, message };
+                },
+
+                openBarcodeScannerModal() {
+                    this.barcodeScannerOpen = true;
+                    this.scannedResult = '';
+                    this.$nextTick(() => {
+                        if (!this.html5QrCodeScanner) {
+                            this.html5QrCodeScanner = new Html5Qrcode("barcode-reader");
+                        }
+                        this.html5QrCodeScanner.start(
+                            { facingMode: "environment" },
+                            { fps: 10, qrbox: { width: 250, height: 150 } },
+                            (decodedText) => {
+                                this.handleScannedBarcode(decodedText);
+                            },
+                            () => {}
+                        ).catch(err => {
+                            this.scannedResult = 'Camera permission required or not found.';
+                        });
+                    });
+                },
+
+                closeBarcodeScannerModal() {
+                    if (this.html5QrCodeScanner) {
+                        this.html5QrCodeScanner.stop().then(() => {
+                            this.barcodeScannerOpen = false;
+                        }).catch(() => {
+                            this.barcodeScannerOpen = false;
+                        });
+                    } else {
+                        this.barcodeScannerOpen = false;
+                    }
+                },
+
+                handleScannedBarcode(barcodeCode) {
+                    const code = barcodeCode.trim();
+                    this.scannedResult = code;
+                    this.playNotificationSound();
+
+                    const existingProd = this.products.find(p => p.barcode === code);
+                    if (existingProd) {
+                        existingProd.stock += 1;
+                        this.showModal('Barcode Recognized!', 'Incremented stock for <strong>' + existingProd.name + '</strong> to ' + existingProd.stock + ' units!');
+                        this.closeBarcodeScannerModal();
+                    } else {
+                        this.stockForm.barcode = code;
+                        this.showModal('New Barcode Scanned', 'Barcode <strong>' + code + '</strong> filled into form! Fill in item name & details to save.');
+                        this.closeBarcodeScannerModal();
+                    }
+                },
+
+                autoFillEgyptianMed(name) {
+                    if (!name) return;
+                    const match = this.masterEgyptianDb.find(m => m.name === name);
+                    if (match) {
+                        this.stockForm.name = match.name;
+                        this.stockForm.category = match.category;
+                        this.stockForm.concentration = match.concentration;
+                        this.stockForm.tags = match.tags;
+                        this.stockForm.price = match.defaultPrice;
+                        this.stockForm.barcode = match.barcode || '';
+                        this.stockForm.stock = 25;
+                    }
+                },
+
+                downloadCsvTemplate() {
+                    const csvContent = "data:text/csv;charset=utf-8,Name,Category,Concentration,Price,Stock,Barcode,Tags\nPanadol Extra,pills,500mg,45,30,6223000123401,paracetamol headache\nCongestal,pills,Paracetamol+Pseudoephedrine,31.5,20,6223000123402,flu fever\nCetafen,syrup,120ml,28,15,6223000123406,kids fever syrup";
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "medicine_template.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+
+                handleCsvUpload(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const text = e.target.result;
+                        const lines = text.split(/\r\n|\n/);
+                        let importedCount = 0;
+
+                        lines.forEach((line, index) => {
+                            if (index === 0 || !line.trim()) return;
+
+                            const cols = line.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+                            const [name, category, concentration, price, stock, barcode, tags] = cols;
+
+                            if (name && (price || stock)) {
+                                this.products.unshift({
+                                    id: 'CSV-' + Date.now().toString() + '-' + index,
+                                    name: name,
+                                    category: (category || 'pills').toLowerCase(),
+                                    concentration: concentration || 'Standard',
+                                    price: parseFloat(price) || 0,
+                                    salePrice: 0,
+                                    isOnSale: false,
+                                    stock: parseInt(stock) || 10,
+                                    barcode: barcode || '',
+                                    tags: tags || '',
+                                    isRare: false,
+                                    reminderSet: false,
+                                    hidden: false,
+                                    imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80'
+                                });
+                                importedCount++;
+                            }
+                        });
+
+                        this.showModal('CSV Import Successful', 'Successfully imported <strong>' + importedCount + '</strong> medications into your catalog!');
+                        event.target.value = '';
+                    };
+                    reader.readAsText(file);
+                },
+
+                quickBumpStock(productId, amount) {
+                    const prod = this.products.find(p => p.id === productId);
+                    if (prod) {
+                        prod.stock += amount;
+                    }
+                },
+
+                handleCustomerAuth() {
+                    if (!this.customerForm.username.trim() || !this.customerForm.phone.trim() || !this.customerForm.address.trim()) return;
+                    this.customerAccount = {
+                        username: this.customerForm.username.trim(),
+                        phone: this.customerForm.phone.trim(),
+                        address: this.customerForm.address.trim(),
+                        completedOrders: this.customerAccount.completedOrders || 0
+                    };
+                    this.customerCheckout.phone = this.customerAccount.phone;
+                    this.customerCheckout.address = this.customerAccount.address;
+                    
+                    this.customerAuthModalOpen = false;
+                    this.currentView = 'customer';
+                },
+
+                handleWorkerAuth() {
+                    this.authErrorMessage = '';
+                    const match = this.staffRoster.find(s => s.id === this.workerForm.privateId.trim());
+                    if (match) {
+                        this.currentWorkerName = match.name;
+                        this.workerAuthModalOpen = false;
+                        this.workerForm.privateId = '';
+                        this.currentView = 'worker';
+                    } else {
+                        this.authErrorMessage = 'ACCESS DENIED: Invalid 12-character Passcode ID.';
+                    }
+                },
+
+                handlePrescriptionUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            this.customerCheckout.prescriptionImage = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+
+                toggleReminder(item) {
+                    item.reminderSet = !item.reminderSet;
+                    if (item.reminderSet) {
+                        this.showModal('Reminder Set', 'We will remind you to re-order <strong>' + item.name + '</strong> before your stock runs out!');
+                    }
+                },
+
+                addToCart(product) {
+                    if (product.stock <= 0) return;
+                    const existing = this.cart.find(item => item.id === product.id);
+                    if (existing) {
+                        if (existing.quantity < product.stock) {
+                            existing.quantity++;
+                        } else {
+                            this.showModal('Stock Limit', 'Maximum available stock reached.');
+                        }
+                    } else {
+                        this.cart.push({ ...product, quantity: 1 });
+                    }
+                },
+
+                removeFromCart(item) {
+                    const idx = this.cart.findIndex(i => i.id === item.id);
+                    if (idx > -1) {
+                        if (this.cart[idx].quantity > 1) {
+                            this.cart[idx].quantity--;
+                        } else {
+                            this.cart.splice(idx, 1);
+                        }
+                    }
+                },
+
+                get cartTotalItems() {
+                    return this.cart.reduce((acc, item) => acc + item.quantity, 0);
+                },
+
+                get rawCartTotalPrice() {
+                    return this.cart.reduce((acc, item) => {
+                        const priceToUse = item.isOnSale ? item.salePrice : item.price;
+                        return acc + (priceToUse * item.quantity);
+                    }, 0);
+                },
+
+                get cartDiscountAmount() {
+                    const discountPercent = this.customerTier.discount || 0;
+                    return Math.round((this.rawCartTotalPrice * (discountPercent / 100)) * 100) / 100;
+                },
+
+                get cartTotalPrice() {
+                    return Math.max(0, this.rawCartTotalPrice - this.cartDiscountAmount);
+                },
+
+                get totalSalesRevenue() {
+                    return this.orders.filter(o => o.status === 'Completed').reduce((acc, ord) => acc + ord.totalPrice, 0);
+                },
+
+                get pendingOrders() {
+                    return this.orders.filter(o => o.status === 'Pending');
+                },
+
+                get resolvedOrders() {
+                    return this.orders.filter(o => o.status !== 'Pending');
+                },
+
+                get customerOrderHistory() {
+                    return this.orders.filter(o => o.username.toLowerCase() === this.customerAccount.username.toLowerCase());
+                },
+
+                get lowStockItems() {
+                    return this.products.filter(p => p.stock < 5);
+                },
+
+                submitCustomerOrder() {
+                    if (this.cart.length === 0 && !this.customerCheckout.prescriptionImage) return;
+                    if (!this.customerCheckout.phone || !this.customerCheckout.address) {
+                        this.showModal('Missing Details', 'Please complete delivery phone and address fields.');
+                        return;
+                    }
+
+                    const tierInfo = this.customerTier;
+                    const newOrder = {
+                        id: 'ORD-' + Date.now().toString().slice(-5),
+                        username: this.customerAccount.username,
+                        phone: this.customerCheckout.phone,
+                        address: this.customerCheckout.address,
+                        notes: this.customerCheckout.notes.trim(),
+                        items: [...this.cart],
+                        prescriptionImage: this.customerCheckout.prescriptionImage,
+                        rawPrice: this.rawCartTotalPrice,
+                        tierDiscountPercent: tierInfo.discount,
+                        discountAmount: this.cartDiscountAmount,
+                        totalPrice: this.cartTotalPrice,
+                        customerOrdersCount: this.customerAccount.completedOrders || 0,
+                        customerTierName: tierInfo.name,
+                        customerTierIcon: tierInfo.icon,
+                        status: 'Pending',
+                        timestamp: new Date().toLocaleString()
+                    };
+
+                    this.orders.unshift(newOrder);
+
+                    this.cart.forEach(cartItem => {
+                        const p = this.products.find(prod => prod.id === cartItem.id);
+                        if (p) p.stock = Math.max(0, p.stock - cartItem.quantity);
+                    });
+
+                    this.cart = [];
+                    this.customerCheckout = { 
+                        phone: this.customerAccount.phone, 
+                        address: this.customerAccount.address, 
+                        notes: '', 
+                        prescriptionImage: null 
+                    };
+                    this.cartDrawerOpen = false;
+                    this.playNotificationSound();
+                    this.showModal('Order Submitted', 'Your order request & prescription have reached the pharmacy desk!');
+                },
+
+                fulfillOrder(orderId) {
+                    const ord = this.orders.find(o => o.id === orderId);
+                    if (ord) {
+                        ord.status = 'Completed';
+                        if (ord.username.toLowerCase() === this.customerAccount.username.toLowerCase()) {
+                            this.customerAccount.completedOrders = (this.customerAccount.completedOrders || 0) + 1;
+                        }
+                        this.playNotificationSound();
+                        this.showModal('Order Marked Completed', 'Order <strong>' + orderId + '</strong> has been fulfilled. Customer streak count incremented!');
+                    }
+                },
+
+                declineOrderPrompt(order) {
+                    const reason = prompt('Please enter the reason for declining/cancelling this order:', 'Out of stock / Invalid prescription');
+                    if (reason !== null) {
+                        order.status = 'Declined';
+                        order.declineReason = reason.trim() || 'Declined by staff';
+
+                        order.items.forEach(item => {
+                            const p = this.products.find(prod => prod.id === item.id);
+                            if (p) p.stock += item.quantity;
+                        });
+
+                        this.showModal('Order Declined & Stock Restored', 'Order <strong>' + order.id + '</strong> marked declined. Items restored back to inventory.');
+                    }
+                },
+
+                populateFromHistory(id) {
+                    if (!id) return;
+                    const match = this.products.find(p => p.id === id);
+                    if (match) {
+                        this.stockForm = { ...match };
+                    }
+                },
+
+                handleStockSubmit() {
+                    if (!this.stockForm.name) return;
+
+                    const existingIdx = this.products.findIndex(p => p.id === this.stockForm.id);
+                    const prodData = {
+                        id: this.stockForm.id || Date.now().toString(),
+                        name: this.stockForm.name,
+                        barcode: this.stockForm.barcode || '',
+                        category: this.stockForm.category,
+                        tags: this.stockForm.tags || '',
+                        concentration: this.stockForm.concentration || 'Standard',
+                        price: parseFloat(this.stockForm.price) || 0,
+                        salePrice: parseFloat(this.stockForm.salePrice) || 0,
+                        isOnSale: !!this.stockForm.isOnSale,
+                        stock: parseInt(this.stockForm.stock) || 0,
+                        isRare: !!this.stockForm.isRare,
+                        reminderSet: false,
+                        hidden: false,
+                        imageUrl: this.stockForm.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80'
+                    };
+
+                    if (existingIdx > -1) {
+                        this.products[existingIdx] = prodData;
+                    } else {
+                        this.products.unshift(prodData);
+                    }
+
+                    this.stockForm = { id: null, name: '', barcode: '', category: 'pills', tags: '', concentration: '', price: '', salePrice: '', isOnSale: false, stock: '', isRare: false, imageUrl: '', hidden: false };
+                    this.showModal('Inventory Saved', 'Product stock updated and visible to customers!');
+                },
+
+                toggleProductVisibility(id) {
+                    const prod = this.products.find(p => p.id === id);
+                    if (prod) {
+                        prod.hidden = !prod.hidden;
+                    }
+                },
+
+                deleteProduct(id) {
+                    this.products = this.products.filter(p => p.id !== id);
+                    this.cart = this.cart.filter(c => c.id !== id);
+                },
+
+                sendChatMessage() {
+                    if (!this.newChatMessage.trim()) return;
+                    this.chatMessages.push({
+                        id: Date.now().toString(),
+                        sender: this.customerAccount.username,
+                        text: this.newChatMessage,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    this.newChatMessage = '';
+                },
+
+                sendWorkerReply() {
+                    if (!this.workerReplyMessage.trim()) return;
+                    this.chatMessages.push({
+                        id: Date.now().toString(),
+                        sender: 'Staff (' + (this.currentWorkerName || 'Pharmacist') + ')',
+                        text: this.workerReplyMessage,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                    this.workerReplyMessage = '';
+                },
+
+                playNotificationSound() {
+                    try {
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(880, ctx.currentTime);
+                        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.5);
+                    } catch (e) {}
+                },
+
+                get filteredCustomerProducts() {
+                    return this.products.filter(p => {
+                        if (p.hidden) return false;
+                        const matchesCategory = this.selectedCategory === 'all' || p.category.toLowerCase() === this.selectedCategory.toLowerCase();
+                        const q = this.searchQuery.toLowerCase();
+                        const matchesSearch = p.name.toLowerCase().includes(q) || 
+                                              p.category.toLowerCase().includes(q) ||
+                                              (p.tags && p.tags.toLowerCase().includes(q)) ||
+                                              (p.barcode && p.barcode.toLowerCase().includes(q)) ||
+                                              p.concentration.toLowerCase().includes(q);
+                        return matchesCategory && matchesSearch;
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
